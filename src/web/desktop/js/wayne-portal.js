@@ -141,13 +141,25 @@ class WaynePortal {
     }
 
     async simulateResponse(userMessage) {
-        // Simulate "typing" delay
-        await new Promise(r => setTimeout(r, 500 + Math.random() * 1000));
-        
-        // Generate response based on what user asked
-        let response = this.generateResponse(userMessage);
-        
-        this.addMessage(response, 'assistant');
+        // Use REAL API call instead of simulation
+        try {
+            const response = await fetch('/api/chat/message', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: userMessage, type: 'user' })
+            });
+            
+            const data = await response.json();
+            
+            if (data.assistant) {
+                this.addMessage(data.assistant.text, 'assistant');
+            } else {
+                this.addMessage("Oops! Something went wrong. Try again!", 'assistant');
+            }
+        } catch (error) {
+            console.error('Chat error:', error);
+            this.addMessage("Connection error! Make sure you're running the server (node src/index.js)", 'assistant');
+        }
         
         // Update status
         this.connected = true;

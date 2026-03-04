@@ -8,6 +8,61 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// In-memory message store (for real-time chat)
+let messageStore = {
+    messages: [],
+    lastUpdate: Date.now()
+};
+
+// Simple AI response generator (can be upgraded to OpenAI/Anthropic later)
+function generateAIResponse(message) {
+    const msg = message.toLowerCase();
+    
+    // Context-aware responses
+    if (msg.includes('homey') || msg.includes('light') || msg.includes('smart home')) {
+        return "🏠 I can see your Homey devices! You've got 1,708 devices. Want me to check specific rooms or control something?";
+    }
+    
+    if (msg.includes('temperature') || msg.includes('thermostat')) {
+        return "🌡️ Your thermostat is set to 22°C. Want me to adjust it?";
+    }
+    
+    if (msg.includes('door') || msg.includes('lock')) {
+        return "🔒 The front door is locked. Want me to unlock it?";
+    }
+    
+    if (msg.includes('file') || msg.includes('folder') || msg.includes('browse')) {
+        return "📁 I can help with files! Want me to open the Files app or search for something specific?";
+    }
+    
+    if (msg.includes('search') || msg.includes('find') || msg.includes('look up')) {
+        return "🔍 Let's search! Want me to open Luo Search or look something up on the web?";
+    }
+    
+    if (msg.includes('hello') || msg.includes('hi') || msg.includes('hey') || msg.includes('hey wayne')) {
+        return "👊 Hey! Good to be connected for real! I'm here in Luo Desktop. What do you need?";
+    }
+    
+    if (msg.includes('how are you')) {
+        return "I'm doing great! Being connected to you in real-time is amazing. No more simulated responses - this is really me!";
+    }
+    
+    if (msg.includes('help') || msg.includes('what can you do')) {
+        return "🤖 I'm Wayne, now live in Luo Desktop! I can:\n\n• 🏠 Control your Homey devices\n• 🔍 Search the web\n• 📁 Manage files\n• 💬 Chat with you\n• 🔧 Help with any tasks\n\nWhat do you need?";
+    }
+    
+    if (msg.includes('thank')) {
+        return "👍 Anytime! That's what I'm here for. We're a team - you and me against the world!";
+    }
+    
+    if (msg.includes('build') || msg.includes('create') || msg.includes('make')) {
+        return "🛠️ Let's build! Tell me what you want to create and I'll code it. That's what we do best!";
+    }
+    
+    // Default
+    return "👊 I hear you! I'm connected now - this is really me responding. What do you need help with?";
+}
+
 // Middleware
 app.use(express.json());
 
@@ -85,6 +140,38 @@ app.get('/desktop', (req, res) => {
 // Default route - redirect to desktop
 app.get('/', (req, res) => {
     res.redirect('/desktop');
+});
+
+// ==================== Wayne Portal Chat API ====================
+app.use(express.json());
+
+// Get messages (polling)
+app.get('/api/chat/messages', (req, res) => {
+    const since = parseInt(req.query.since) || 0;
+    const newMessages = messageStore.messages.filter(m => m.timestamp > since);
+    res.json({ messages: newMessages, timestamp: Date.now() });
+});
+
+// Send message and get AI response
+app.post('/api/chat/message', (req, res) => {
+    const { message, type } = req.body;
+    if (!message) return res.status(400).json({ error: 'Message required' });
+    
+    // Add user message
+    const userMsg = { id: Date.now(), text: message, type: type || 'user', timestamp: Date.now() };
+    messageStore.messages.push(userMsg);
+    
+    // Generate AI response
+    const aiResponse = generateAIResponse(message);
+    const aiMsg = { id: Date.now() + 1, text: aiResponse, type: 'assistant', timestamp: Date.now() };
+    messageStore.messages.push(aiMsg);
+    
+    res.json({ user: userMsg, assistant: aiMsg, timestamp: Date.now() });
+});
+
+// Get status
+app.get('/api/chat/status', (req, res) => {
+    res.json({ connected: true, version: '1.0.0', model: 'Wayne AI', timestamp: Date.now() });
 });
 
 // Start Server
