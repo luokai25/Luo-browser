@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luo Desktop</title>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles/01-base.css">
+    <link rel="stylesheet" href="styles/05-visual-effects.css">
+    <link rel="stylesheet" href="styles/06-advanced-components.css">
+    <link rel="stylesheet" href="styles/07-widgets.css">
+</head>
+<body>
+    <!-- Dynamic Background -->
+    <div id="dynamic-bg">
+        <div class="particles" id="particles"></div>
+    </div>
+
+    <!-- Widgets Layer -->
+    <div id="widgets-layer"></div>
+
+    <!-- Desktop -->
+    <div id="desktop">
+        <div class="desktop-icons" id="desktop-icons">
+            <!-- Icons will be populated by JS -->
+        </div>
+    </div>
+
+    <!-- Windows Container -->
+    <div id="windows"></div>
+
+    <!-- Scripts -->
+    <script src="js/advanced-window-manager.js"></script>
+    <script src="js/command-palette.js"></script>
+    <script src="js/notification-system.js"></script>
+    <script src="js/advanced-taskbar.js"></script>
+    <script src="js/settings-system.js"></script>
+    <script src="js/widget-system.js"></script>
+    <script src="js/media-player.js"></script>
+    
+    <script>
+        // Luo Desktop - Main Entry Point
+        class LuoDesktop {
+            constructor() {
+                this.windows = new Map();
+                this.activeWindowId = null;
+                this.init();
+            }
+
+            init() {
+                this.setupDesktop();
+                this.setupKeyboardShortcuts();
+                this.setupContextMenus();
+                this.startParticleSystem();
+                this.loadPersistedState();
+            }
+
+            setupDesktop() {
+                // Desktop icons
+                const icons = [
+                    { id: 'browser', icon: '🌐', name: 'Browser' },
+                    { id: 'files', icon: '📁', name: 'Files' },
+                    { id: 'terminal', icon: '⌨️', name: 'Terminal' },
+                    { id: 'homey', icon: '🏠', name: 'Homey' },
+                    { id: 'settings', icon: '⚙️', name: 'Settings' },
+                    { id: 'trading', icon: '📈', name: 'Trading' },
+                    { id: 'agent', icon: '🤖', name: 'AI Agent' },
+                    { id: 'notepad', icon: '📝', name: 'Notepad' },
+                    { id: 'calculator', icon: '🧮', name: 'Calculator' },
+                    { id: 'calendar', icon: '📅', name: 'Calendar' },
+                    { id: 'music', icon: '🎵', name: 'Music' },
+                    { id: 'video', icon: '🎬', name: 'Video' },
+                    { id: 'camera', icon: '📷', name: 'Camera' },
+                    { id: 'notes', icon: '📒', name: 'Notes' },
+                ];
+
+                const container = document.getElementById('desktop-icons');
+                container.innerHTML = icons.map(icon => `
+                    <div class="desktop-icon" data-app="${icon.id}">
+                        <span class="icon">${icon.icon}</span>
+                        <span>${icon.name}</span>
+                    </div>
+                `).join('');
+
+                // Double-click to open
+                container.querySelectorAll('.desktop-icon').forEach(el => {
+                    el.addEventListener('dblclick', () => {
+                        this.openApp(el.dataset.app);
+                    });
+                    
+                    // Single click to select
+                    el.addEventListener('click', (e) => {
+                        container.querySelectorAll('.desktop-icon').forEach(i => i.classList.remove('selected'));
+                        el.classList.add('selected');
+                    });
+                });
+            }
+
+            openApp(appName) {
+                const appConfigs = {
+                    browser: { title: 'Browser', icon: '🌐', content: this.getBrowserContent() },
+                    files: { title: 'Files', icon: '📁', content: this.getFilesContent() },
+                    terminal: { title: 'Terminal', icon: '⌨️', content: this.getTerminalContent() },
+                    homey: { title: 'Homey Hub', icon: '🏠', content: this.getHomeyContent() },
+                    settings: { title: 'Settings', icon: '⚙️', content: this.getSettingsContent() },
+                    trading: { title: 'Trading', icon: '📈', content: this.getTradingContent() },
+                    agent: { title: 'AI Agent', icon: '🤖', content: this.getAgentContent() },
+                    notepad: { title: 'Notepad', icon: '📝', content: this.getNotepadContent() },
+                    calculator: { title: 'Calculator', icon: '🧮', content: this.getCalculatorContent() },
+                    calendar: { title: 'Calendar', icon: '📅', content: this.getCalendarContent() },
+                    music: { title: 'Music', icon: '🎵', content: '<div class="app-music"><p>Music Player</p></div>' },
+                    video: { title: 'Video', icon: '🎬', content: '<div class="app-video"><p>Video Player</p></div>' },
+                    camera: { title: 'Camera', icon: '📷', content: '<div class="app-camera"><p>Camera</p></div>' },
+                    notes: { title: 'Notes', icon: '📒', content: this.getNotesContent() },
+                };
+
+                const config = appConfigs[appName] || { title: appName, icon: '📦', content: '<p>App content</p>' };
+                
+                // Use advanced window manager
+                const windowId = window.advancedWindowManager.createWindow({
+                    appName,
+                    title: config.title,
+                    icon: config.icon,
+                    content: config.content,
+                    width: appName === 'browser' ? 900 : 700,
+                    height: appName === 'browser' ? 600 : 500
+                });
+
+                // Add to taskbar
+                window.advancedTaskbar.addWindow(windowId, appName, config.icon, config.title);
+
+                return windowId;
+            }
+
+            getBrowserContent() {
+                return `
+                    <div class="app-browser">
+                        <div class="browser-toolbar">
+                            <button class="browser-btn">←</button>
+                            <button class="browser-btn">→</button>
+                            <button class="browser-btn">↻</button>
+                            <input type="text" class="browser-url" placeholder="Enter URL or luo:// address" value="luo://luosearch">
+                            <button class="browser-btn">⭐</button>
+                        </div>
+                        <div class="browser-content">
+                            <iframe src="https://google.com" sandbox="allow-same-origin allow-scripts allow-forms"></iframe>
+                        </div>
+                    </div>
+                `;
+            }
+
+            getFilesContent() {
+                return `
+                    <div class="app-files">
+                        <div class="files-toolbar">
+                            <button class="files-btn">←</button>
+                            <button class="files-btn">↑</button>
+                            <div class="files-path">Home / Documents</div>
+                        </div>
+                        <div class="files-grid">
+                            <div class="file-item"><span class="file-icon">📁</span><span>Projects</span></div>
+                            <div class="file-item"><span class="file-icon">📁</span><span>Downloads</span></div>
+                            <div class="file-item"><span class="file-icon">📁</span><span>Documents</span></div>
+                            <div class="file-item"><span class="file-icon">📁</span><span>Pictures</span></div>
+                            <div class="file-item"><span class="file-icon">📄</span><span>readme.txt</span></div>
+                            <div class="file-item"><span class="file-icon">📄</span><span>notes.md</span></div>
+                            <div class="file-item"><span class="file-icon">🖼️</span><span>photo.jpg</span></div>
+                            <div class="file-item"><span class="file-icon">🎵</span><span>song.mp3</span></div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            getTerminalContent() {
+                return `
+                    <div class="app-terminal">
+                        <div class="terminal-output">
+                            <div class="terminal-line">Luo Desktop Terminal v1.0.0</div>
+                            <div class="terminal-line">Type 'help' for available commands</div>
+                            <div class="terminal-line"><br></div>
+                        </div>
+                        <div class="terminal-input-line">
+                            <span class="terminal-prompt">luo@desktop:~$</span>
+                            <input type="text" class="terminal-input" autofocus>
+                        </div>
+                    </div>
+                `;
+            }
+
+            getHomeyContent() {
+                return `
+                    <div class="app-homey">
+                        <div class="homey-header">
+                            <h2>🏠 Homey Devices</h2>
+                            <span class="homey-status">● 1,708 online</span>
+                        </div>
+                        <div class="homey-grid">
+                            <div class="device-card">
+                                <span class="device-icon">💡</span>
+                                <span class="device-name">Living Room Light</span>
+                                <span class="device-status on">On • 75%</span>
+                            </div>
+                            <div class="device-card">
+                                <span class="device-icon">🌡️</span>
+                                <span class="device-name">Thermostat</span>
+                                <span class="device-status">22°C</span>
+                            </div>
+                            <div class="device-card">
+                                <span class="device-icon">🔒</span>
+                                <span class="device-name">Front Door</span>
+                                <span class="device-status locked">Locked</span>
+                            </div>
+                            <div class="device-card">
+                                <span class="device-icon">📺</span>
+                                <span class="device-name">Living Room TV</span>
+                                <span class="device-status off">Off</span>
+                            </div>
+                            <div class="device-card">
+                                <span class="device-icon">🛋️</span>
+                                <span class="device-name">Sofa</span>
+                                <span class="device-status">Comfortable</span>
+                            </div>
+                            <div class="device-card">
+                                <span class="device-icon">🚿</span>
+                                <span class="device-name">Bathroom</span>
+                                <span class="device-status off">Off</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            getSettingsContent() {
+                return `
+                    <div class="app-settings">
+                        <div class="settings-sidebar">
+                            <button class="settings-nav active" data-section="appearance">🎨 Appearance</button>
+                            <button class="settings-nav" data-section="display">🖥️ Display</button>
+                            <button class="settings-nav" data-section="sound">🔊 Sound</button>
+                            <button class="settings-nav" data-section="network">🌐 Network</button>
+                            <button class="settings-nav" data-section="accounts">👤 Accounts</button>
+                            <button class="settings-nav" data-section="privacy">🔒 Privacy</button>
+                        </div>
+                        <div class="settings-content">
+                            <h2>Appearance</h2>
+                            <div class="setting-item">
+                                <span>Dark Mode</span>
+                                <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+                            </div>
+                            <div class="setting-item">
+                                <span>Accent Color</span>
+                                <div class="color-options">
+                                    <span class="color-swatch" style="background: #6366f1"></span>
+                                    <span class="color-swatch" style="background: #8b5cf6"></span>
+                                    <span class="color-swatch" style="background: #d946ef"></span>
+                                    <span class="color-swatch" style="background: #f43f5e"></span>
+                                    <span class="color-swatch" style="background: #f59e0b"></span>
+                                    <span class="color-swatch" style="background: #10b981"></span>
+                                </div>
+                            </div>
+                            <div class="setting-item">
+                                <span>Window Effects</span>
+                                <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+                            </div>
+                            <div class="setting-item">
+                                <span>Animations</span>
+                                <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            getTradingContent() {
+                return `
+                    <div class="app-trading">
+                        <div class="trading-header">
+                            <h2>📈 Trading Dashboard</h2>
+                            <span class="trading-total">Total: $45,678.90</span>
+                        </div>
+                        <div class="trading-cards">
+                            <div class="trading-card positive">
+                                <span class="card-symbol">BTC/USDT</span>
+                                <span class="card-price">$67,432</span>
+                                <span class="card-change positive">+2.34%</span>
+                            </div>
+                            <div class="trading-card positive">
+                                <span class="card-symbol">ETH/USDT</span>
+                                <span class="card-price">$3,567</span>
+                                <span class="card-change positive">+1.87%</span>
+                            </div>
+                            <div class="trading-card negative">
+                                <span class="card-symbol">SOL/USDT</span>
+                                <span class="card-price">$142</span>
+                                <span class="card-change negative">-0.45%</span>
+                            </div>
+                            <div class="trading-card positive">
+                                <span class="card-symbol">XRP/USDT</span>
+                                <span class="card-price">$0.62</span>
+                                <span class="card-change positive">+5.12%</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            getAgentContent() {
+                return `
+                    <div class="app-agent">
+                        <div class="agent-chat">
+                            <div class="agent-message assistant">Hello! I'm your AI assistant on Luo Desktop. Press ⌘Space to open the command palette anytime.</div>
+                        </div>
+                        <div class="agent-input-area">
+                            <input type="text" class="agent-input" placeholder="Ask me anything...">
+                            <button class="agent-send">Send</button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            getNotepadContent() {
+                return `<textarea class="notepad-content" placeholder="Start typing..."></textarea>`;
+            }
+
+            getCalculatorContent() {
+                return `
+                    <div class="calculator">
+                        <div class="calc-display">0</div>
+                        <div class="calc-buttons">
+                            <button class="calc-btn fn">C</button>
+                            <button class="calc-btn fn">±</button>
+                            <button class="calc-btn fn">%</button>
+                            <button class="calc-btn op">÷</button>
+                            <button class="calc-btn num">7</button>
+                            <button class="calc-btn num">8</button>
+                            <button class="calc-btn num">9</button>
+                            <button class="calc-btn op">×</button>
+                            <button class="calc-btn num">4</button>
+                            <button class="calc-btn num">5</button>
+                            <button class="calc-btn num">6</button>
+                            <button class="calc-btn op">-</button>
+                            <button class="calc-btn num">1</button>
+                            <button class="calc-btn num">2</button>
+                            <button class="calc-btn num">3</button>
+                            <button class="calc-btn op">+</button>
+                            <button class="calc-btn num zero">0</button>
+                            <button class="calc-btn num">.</button>
+                            <button class="calc-btn eq">=</button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            getCalendarContent() {
+                return `
+                    <div class="app-calendar">
+                        <div class="calendar-header">
+                            <button class="cal-nav">←</button>
+                            <h3>March 2026</h3>
+                            <button class="cal-nav">→</button>
+                        </div>
+                        <div class="calendar-grid">
+                            <div class="cal-day-header">Sun</div>
+                            <div class="cal-day-header">Mon</div>
+                            <div class="cal-day-header">Tue</div>
+                            <div class="cal-day-header">Wed</div>
+                            <div class="cal-day-header">Thu</div>
+                            <div class="cal-day-header">Fri</div>
+                            <div class="cal-day-header">Sat</div>
+                            <div class="cal-day">1</div>
+                            <div class="cal-day">2</div>
+                            <div class="cal-day">3</div>
+                            <div class="cal-day today">4</div>
+                            <div class="cal-day">5</div>
+                            <div class="cal-day">6</div>
+                            <div class="cal-day">7</div>
+                            <div class="cal-day">8</div>
+                            <div class="cal-day">9</div>
+                            <div class="cal-day">10</div>
+                            <div class="cal-day">11</div>
+                            <div class="cal-day">12</div>
+                            <div class="cal-day">13</div>
+                            <div class="cal-day">14</div>
+                            <div class="cal-day">15</div>
+                            <div class="cal-day">16</div>
+                            <div class="cal-day">17</div>
+                            <div class="cal-day">18</div>
+                            <div class="cal-day">19</div>
+                            <div class="cal-day">20</div>
+                            <div class="cal-day">21</div>
+                            <div class="cal-day">22</div>
+                            <div class="cal-day">23</div>
+                            <div class="cal-day">24</div>
+                            <div class="cal-day">25</div>
+                            <div class="cal-day">26</div>
+                            <div class="cal-day">27</div>
+                            <div class="cal-day">28</div>
+                            <div class="cal-day">29</div>
+                            <div class="cal-day">30</div>
+                            <div class="cal-day">31</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            getNotesContent() {
+                return `<textarea class="notes-content" placeholder="Start writing notes..."></textarea>`;
+            }
+
+            setupKeyboardShortcuts() {
+                document.addEventListener('keydown', (e) => {
+                    // F11 - Fullscreen
+                    if (e.key === 'F11') {
+                        e.preventDefault();
+                        document.documentElement.requestFullscreen?.();
+                    }
+                    
+                    // Print screen
+                    if (e.key === 'PrintScreen') {
+                        // Would take screenshot
+                        window.notificationSystem.success('Screenshot saved!');
+                    }
+                });
+            }
+
+            setupContextMenus() {
+                document.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    
+                    // Desktop context menu
+                    if (e.target.closest('#desktop') || e.target.closest('.desktop-icons')) {
+                        this.showDesktopContextMenu(e.clientX, e.clientY);
+                    }
+                });
+            }
+
+            showDesktopContextMenu(x, y) {
+                const existing = document.querySelector('.context-menu');
+                if (existing) existing.remove();
+
+                const menu = document.createElement('div');
+                menu.className = 'context-menu';
+                menu.style.left = `${x}px`;
+                menu.style.top = `${y}px`;
+
+                menu.innerHTML = `
+                    <div class="context-menu-item" data-action="new-folder"><span class="icon">📁</span>New Folder</div>
+                    <div class="context-menu-item" data-action="refresh"><span class="icon">🔄</span>Refresh</div>
+                    <div class="context-menu-separator"></div>
+                    <div class="context-menu-item" data-action="paste"><span class="icon">📋</span>Paste</div>
+                    <div class="context-menu-item" data-action="new-window"><span class="icon">➕</span>New Window</div>
+                    <div class="context-menu-separator"></div>
+                    <div class="context-menu-item" data-action="display-settings"><span class="icon">🖥️</span>Display Settings</div>
+                    <div class="context-menu-item" data-action="personalize"><span class="icon">🎨</span>Personalize</div>
+                `;
+
+                document.body.appendChild(menu);
+
+                menu.querySelectorAll('.context-menu-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        this.handleContextAction(item.dataset.action);
+                        menu.remove();
+                    });
+                });
+
+                setTimeout(() => {
+                    document.addEventListener('click', function close() {
+                        menu.remove();
+                        document.removeEventListener('click', close);
+                    });
+                }, 0);
+            }
+
+            handleContextAction(action) {
+                switch (action) {
+                    case 'new-folder':
+                        // Create new folder
+                        window.notificationSystem.success('New folder created');
+                        break;
+                    case 'display-settings':
+                        this.openApp('settings');
+                        break;
+                    case 'personalize':
+                        this.openApp('settings');
+                        break;
+                    default:
+                        console.log('Action:', action);
+                }
+            }
+
+            startParticleSystem() {
+                const container = document.getElementById('particles');
+                for (let i = 0; i < 20; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    particle.style.left = `${Math.random() * 100}%`;
+                    particle.style.animationDelay = `${Math.random() * 15}s`;
+                    particle.style.animationDuration = `${15 + Math.random() * 10}s`;
+                    container.appendChild(particle);
+                }
+            }
+
+            loadPersistedState() {
+                // Would load from localStorage/IndexedDB
+            }
+
+            // Utility methods
+            showNotification(title, body, config = {}) {
+                window.notificationSystem.notify(title, body, config);
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            window.luoDesktop = new LuoDesktop();
+            
+            // Welcome notification
+            setTimeout(() => {
+                window.notificationSystem.notify(
+                    'Welcome to Luo Desktop!',
+                    'Press ⌘+Space to open the command palette',
+                    { icon: '🎉', duration: 5000 }
+                );
+            }, 1000);
+        });
+    </script>
+    
+    <style>
+        /* App-specific styles inline for simplicity */
+        .app-browser { display: flex; flex-direction: column; height: 100%; }
+        .browser-toolbar { display: flex; gap: 8px; padding: 10px; background: #1e1e2e; }
+        .browser-btn { padding: 6px 12px; background: rgba(255,255,255,0.1); border: none; border-radius: 6px; color: white; cursor: pointer; }
+        .browser-url { flex: 1; padding: 8px 16px; background: rgba(255,255,255,0.1); border: none; border-radius: 20px; color: white; outline: none; }
+        .browser-content { flex: 1; }
+        .browser-content iframe { width: 100%; height: 100%; border: none; }
+
+        .app-files, .app-homey, .app-settings, .app-trading, .app-terminal, .app-agent, .app-calendar { height: 100%; padding: 20px; overflow: auto; }
+
+        .files-toolbar { display: flex; gap: 10px; padding: 10px; background: rgba(0,0,0,0.2); }
+        .files-btn { padding: 6px 12px; background: rgba(255,255,255,0.1); border: none; border-radius: 6px; color: white; cursor: pointer; }
+        .files-path { color: var(--text-secondary); font-size: 13px; }
+        .files-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; padding: 15px; }
+        .file-item { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 15px; border-radius: 8px; cursor: pointer; }
+        .file-item:hover { background: rgba(255,255,255,0.1); }
+        .file-icon { font-size: 36px; }
+
+        .homey-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .homey-status { padding: 8px 16px; background: rgba(52,211,153,0.2); border-radius: 20px; color: #34d399; }
+        .homey-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
+        .device-card { display: flex; flex-direction: column; gap: 8px; padding: 20px; background: rgba(255,255,255,0.05); border-radius: 12px; }
+        .device-icon { font-size: 32px; }
+        .device-name { font-weight: 500; }
+        .device-status { font-size: 13px; color: var(--text-secondary); }
+        .device-status.on { color: #34d399; }
+        .device-status.locked { color: #34d399; }
+        .device-status.off { color: var(--text-tertiary); }
+
+        .settings-sidebar { width: 200px; border-right: 1px solid rgba(255,255,255,0.1); padding-right: 20px; }
+        .settings-nav { display: block; width: 100%; padding: 12px 16px; background: none; border: none; border-radius: 8px; color: var(--text-secondary); cursor: pointer; text-align: left; margin-bottom: 4px; }
+        .settings-nav:hover { background: rgba(255,255,255,0.05); }
+        .settings-nav.active { background: rgba(99,102,241,0.2); color: white; }
+        .settings-content h2 { margin-bottom: 20px; }
+        .setting-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .toggle { position: relative; width: 50px; height: 26px; cursor: pointer; }
+        .toggle input { display: none; }
+        .toggle-slider { position: absolute; width: 100%; height: 100%; background: rgba(255,255,255,0.2); border-radius: 13px; transition: 0.3s; }
+        .toggle-slider::after { content: ''; position: absolute; width: 22px; height: 22px; background: white; border-radius: 50%; top: 2px; left: 2px; transition: 0.3s; }
+        .toggle input:checked + .toggle-slider { background: var(--accent-primary); }
+        .toggle input:checked + .toggle-slider::after { transform: translateX(24px); }
+        .color-options { display: flex; gap: 8px; }
+        .color-swatch { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; }
+        .color-swatch:hover { border-color: white; }
+
+        .trading-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .trading-total { font-size: 18px; font-weight: 600; }
+        .trading-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
+        .trading-card { display: flex; flex-direction: column; gap: 8px; padding: 20px; background: rgba(255,255,255,0.05); border-radius: 12px; border-left: 4px solid #666; }
+        .trading-card.positive { border-left-color: #34d399; }
+        .trading-card.negative { border-left-color: #f87171; }
+        .card-symbol { font-weight: 600; }
+        .card-price { font-size: 24px; font-weight: 700; }
+        .card-change { font-size: 14px; }
+        .card-change.positive { color: #34d399; }
+        .card-change.negative { color: #f87171; }
+
+        .app-terminal { background: #0d1117; font-family: var(--font-mono); height: 100%; display: flex; flex-direction: column; }
+        .terminal-output { flex: 1; padding: 15px; overflow: auto; }
+        .terminal-line { color: #c9d1d9; margin-bottom: 4px; }
+        .terminal-input-line { display: flex; align-items: center; gap: 10px; padding: 15px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .terminal-prompt { color: #7ee787; }
+        .terminal-input { flex: 1; background: none; border: none; color: white; font-family: inherit; font-size: 14px; outline: none; }
+
+        .app-agent { display: flex; flex-direction: column; height: 100%; }
+        .agent-chat { flex: 1; padding: 15px; overflow: auto; }
+        .agent-message { padding: 12px 16px; border-radius: 12px; margin-bottom: 10px; max-width: 80%; }
+        .agent-message.assistant { background: rgba(255,255,255,0.1); }
+        .agent-message.user { background: var(--accent-primary); margin-left: auto; }
+        .agent-input-area { display: flex; gap: 10px; padding: 15px; background: rgba(0,0,0,0.2); }
+        .agent-input { flex: 1; padding: 12px 16px; background: rgba(255,255,255,0.1); border: none; border-radius: 8px; color: white; outline: none; }
+        .agent-send { padding: 12px 24px; background: var(--accent-primary); border: none; border-radius: 8px; color: white; cursor: pointer; }
+
+        .notepad-content, .notes-content { width: 100%; height: 100%; background: transparent; border: none; color: white; font-family: var(--font-mono); font-size: 14px; padding: 15px; resize: none; outline: none; }
+
+        .calculator { display: flex; flex-direction: column; height: 100%; padding: 15px; }
+        .calc-display { padding: 20px; text-align: right; font-size: 36px; font-weight: 300; background: rgba(0,0,0,0.3); border-radius: 12px; margin-bottom: 15px; font-family: var(--font-mono); }
+        .calc-buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; flex: 1; }
+        .calc-btn { border: none; border-radius: 12px; font-size: 20px; cursor: pointer; transition: transform 0.1s; }
+        .calc-btn:active { transform: scale(0.95); }
+        .calc-btn.num { background: rgba(255,255,255,0.1); color: white; }
+        .calc-btn.fn { background: rgba(255,255,255,0.2); color: white; }
+        .calc-btn.op { background: var(--accent-primary); color: white; }
+        .calc-btn.eq { background: #34d399; color: white; }
+        .calc-btn.zero { grid-column: span 2; }
+
+        .app-calendar { height: 100%; display: flex; flex-direction: column; }
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; padding: 10px; }
+        .cal-nav { padding: 8px 16px; background: rgba(255,255,255,0.1); border: none; border-radius: 8px; color: white; cursor: pointer; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; flex: 1; }
+        .cal-day-header { text-align: center; padding: 10px; font-size: 12px; color: var(--text-tertiary); }
+        .cal-day { text-align: center; padding: 10px; border-radius: 8px; cursor: pointer; }
+        .cal-day:hover { background: rgba(255,255,255,0.1); }
+        .cal-day.today { background: var(--accent-primary); }
+    </style>
+</body>
+</html>

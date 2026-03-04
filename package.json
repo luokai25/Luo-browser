@@ -1,1 +1,22 @@
-{\n  "name": "luo-browser",\n  "version": "1.0.0",\n  "description": "Node.js project configuration for the Luo Browser",\n  "main": "index.js",\n  "scripts": {\n    "test": "echo 'Error: no test specified' && exit 1"\n  },\n  "repository": {\n    "type": "git",\n    "url": "https://github.com/luokai25/Luo-browser.git"\n  },\n  "keywords": ["browser", "node", "luo"],\n  "author": "luokai25",\n  "license": "ISC"\n}
+{
+  "name": "luo-desktop",
+  "version": "1.0.0",
+  "description": "Luo Desktop - A dual-access desktop for humans and AI agents",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "desktop": "node src/index.js",
+    "dev": "node src/index.js",
+    "test": "echo 'Error: no test specified' && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/luokai25/Luo-browser.git"
+  },
+  "keywords": ["desktop", "browser", "ai", "agent", "luo"],
+  "author": "luokai25",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

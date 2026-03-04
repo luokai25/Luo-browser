@@ -1,0 +1,108 @@
+/* Luo Desktop - Window Styles */
+.window {
+    position: absolute;
+    min-width: 400px;
+    min-height: 300px;
+    background: var(--window-bg);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    pointer-events: auto;
+    animation: windowOpen 0.2s ease-out;
+}
+
+@keyframes windowOpen {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.window.maximized {
+    width: calc(100vw - 20px) !important;
+    height: calc(100vh - var(--taskbar-height) - 20px) !important;
+    top: 10px !important;
+    left: 10px !important;
+}
+
+.window.minimized {
+    display: none;
+}
+
+.window-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 15px;
+    background: var(--window-header);
+    border-radius: 8px 8px 0 0;
+    cursor: move;
+}
+
+.window-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text);
+    font-weight: 500;
+}
+
+.window-title .window-icon {
+    font-size: 18px;
+}
+
+.window-controls {
+    display: flex;
+    gap: 8px;
+}
+
+.window-btn {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    transition: filter 0.2s;
+}
+
+.window-btn:hover {
+    filter: brightness(1.2);
+}
+
+.window-btn.minimize { background: #fbbf24; }
+.window-btn.maximize { background: #34d399; }
+.window-btn.close { background: #f87171; }
+
+.window-content {
+    flex: 1;
+    overflow: auto;
+    padding: 15px;
+    color: var(--text);
+}
+
+/* Window states */
+.window[data-state="minimized"] {
+    display: none;
+}
+
+.window-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: white;
+    border-radius: 0 0 8px 8px;
+}
+
+/* Resize handles */
+.window-resize {
+    position: absolute;
+    background: transparent;
+}
+
+.window-resize.n { top: -4px; left: 10px; right: 10px; height: 8px; cursor: n-resize; }
+.window-resize.s { bottom: -4px; left: 10px; right: 10px; height: 8px; cursor: s-resize; }
+.window-resize.e { right: -4px; top: 10px; bottom: 10px; width: 8px; cursor: e-resize; }
+.window-resize.w { left: -4px; top: 10px; bottom: 10px; width: 8px; cursor: w-resize; }
+.window-resize.ne { top: -4px; right: -4px; width: 12px; height: 12px; cursor: ne-resize; }
+.window-resize.nw { top: -4px; left: -4px; width: 12px; height: 12px; cursor: nw-resize; }
+.window-resize.se { bottom: -4px; right: -4px; width: 12px; height: 12px; cursor: se-resize; }
+.window-resize.sw { bottom: -4px; left: -4px; width: 12px; height: 12px; cursor: sw-resize; }
