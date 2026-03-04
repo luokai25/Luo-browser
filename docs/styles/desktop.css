@@ -1,0 +1,94 @@
+/* Luo Desktop - Main Styles */
+:root {
+    --desktop-bg: #1a1a2e;
+    --desktop-bg-image: url('../assets/wallpaper.jpg');
+    --taskbar-bg: #16213e;
+    --taskbar-height: 48px;
+    --accent: #0f3460;
+    --accent-light: #e94560;
+    --text: #ffffff;
+    --text-dim: #a0a0a0;
+    --window-bg: #1f2937;
+    --window-header: #111827;
+    --shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    overflow: hidden;
+    user-select: none;
+}
+
+#desktop {
+    width: 100vw;
+    height: calc(100vh - var(--taskbar-height));
+    background: var(--desktop-bg);
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    position: relative;
+    padding: 20px;
+}
+
+.desktop-icons {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100px;
+}
+
+.desktop-icon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+    width: 90px;
+}
+
+.desktop-icon:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+.desktop-icon .icon {
+    font-size: 36px;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
+.desktop-icon span {
+    color: var(--text);
+    font-size: 12px;
+    text-align: center;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+}
+
+/* Window container */
+#windows {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: calc(100vh - var(--taskbar-height));
+    pointer-events: none;
+    z-index: 100;
+}
+
+/* Taskbar already has its own CSS file */
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
