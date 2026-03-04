@@ -151,7 +151,7 @@
                             <button class="browser-btn back" title="Back">←</button>
                             <button class="browser-btn forward" title="Forward">→</button>
                             <button class="browser-btn refresh" title="Refresh">↻</button>
-                            <input type="text" class="browser-url" placeholder="Enter URL or search..." value="https://duckduckgo.com">
+                            <input type="text" class="browser-url" placeholder="Enter URL or search..." value="https://www.bing.com">
                             <button class="browser-btn home" title="Home">🏠</button>
                         </div>
                         <div class="browser-content">
@@ -582,8 +582,8 @@
                     } else if (e.target.classList.contains('refresh')) {
                         iframe.src = iframe.src;
                     } else if (e.target.classList.contains('home')) {
-                        iframe.src = 'https://duckduckgo.com';
-                        urlInput.value = 'https://duckduckgo.com';
+                        iframe.src = 'https://www.bing.com';
+                        urlInput.value = 'https://www.bing.com';
                     }
                 });
                 
@@ -597,7 +597,7 @@
                     if (e.key === 'Enter' && document.activeElement === urlInput) {
                         let url = urlInput.value.trim();
                         if (!url.startsWith('http') && !url.startsWith('luo://')) {
-                            url = 'https://duckduckgo.com/?q=' + encodeURIComponent(url);
+                            url = 'https://www.bing.com/?q=' + encodeURIComponent(url);
                         } else if (!url.startsWith('http') && url.startsWith('luo://')) {
                             // Handle luo:// protocol
                             const site = url.replace('luo://', '').split('/')[0];

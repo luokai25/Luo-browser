@@ -207,45 +207,50 @@ class CommandPalette {
     }
 
     async fetchRealSearchResults(query) {
-        // Use DuckDuckGo Instant Answer API for real results
+        // Use Wikipedia and other open APIs for search results
         try {
-            // Get search suggestions / instant answers
-            const response = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`);
-            const data = await response.json();
+            // Get Wikipedia results
+            const wikiResponse = await fetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*&limit=5`);
+            const wikiData = await wikiResponse.json();
             
-            if (data && data.RelatedTopics) {
-                const webResults = data.RelatedTopics.slice(0, 8).map((item, i) => ({
-                    id: `web-${i}`,
-                    name: item.Text || item.Name || 'Result',
-                    icon: '🔗',
-                    category: 'web',
-                    url: item.FirstURL || '',
-                    thumbnail: item.Icon ? item.Icon.URL : ''
-                }));
-                
-                // Add main result if available
-                if (data.AbstractText) {
-                    webResults.unshift({
-                        id: 'web-main',
-                        name: data.AbstractText.substring(0, 100) + (data.AbstractText.length > 100 ? '...' : ''),
-                        icon: data.AbstractSource || '🌐',
+            const webResults = [];
+            
+            // Wikipedia results
+            if (wikiData && wikiData.query && wikiData.query.search) {
+                wikiData.query.search.forEach((item, i) => {
+                    webResults.push({
+                        id: `wiki-${i}`,
+                        name: item.title,
+                        icon: '📚',
                         category: 'web',
-                        url: data.AbstractURL || '',
-                        isMain: true
+                        url: `https://en.wikipedia.org/wiki/${encodeURIComponent(item.title.replace(/ /g, '_'))}`,
+                        description: item.snippet.replace(/<[^>]*>/g, '').substring(0, 100)
                     });
-                }
-                
-                this.categories.web = webResults;
-                this.renderResults();
+                });
             }
+            
+            // If no results, add a web search link
+            if (webResults.length === 0) {
+                webResults.push({
+                    id: 'web-search',
+                    name: `Search "${query}" on Google`,
+                    icon: '🔍',
+                    category: 'web',
+                    url: `https://www.google.com/search?q=${encodeURIComponent(query)}`
+                });
+            }
+            
+            this.categories.web = webResults;
+            this.renderResults();
+            
         } catch (e) {
-            // Fallback to basic web search link
+            // Fallback to Bing
             this.categories.web = [{ 
                 id: 'web-search', 
-                name: `Search "${query}" on web`, 
-                icon: '🌐', 
+                name: `Search "${query}" on Bing`, 
+                icon: '🔍', 
                 category: 'web', 
-                url: `https://duckduckgo.com/?q=${encodeURIComponent(query)}` 
+                url: `https://www.bing.com/search?q=${encodeURIComponent(query)}` 
             }];
             this.renderResults();
         }
