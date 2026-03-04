@@ -1,17 +1,18 @@
 {
   "name": "luo-desktop",
+  "productName": "Luo Desktop",
   "version": "1.0.0",
   "description": "Luo Desktop - A web desktop with AI integration",
-  "main": "src/index.js",
+  "main": "main.js",
   "scripts": {
-    "start": "node src/index.js",
-    "desktop": "node src/index.js",
-    "dev": "node src/index.js"
+    "start": "electron .",
+    "build": "electron-builder --win portable"
   },
-  "keywords": ["desktop", "browser", "ai", "agent", "luo"],
   "author": "luokai25",
-  "license": "ISC",
-  "dependencies": {
-    "express": "^4.18.2"
-  }
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "dependencies": {}
 }
