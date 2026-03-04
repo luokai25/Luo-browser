@@ -207,53 +207,63 @@ class CommandPalette {
     }
 
     async fetchRealSearchResults(query) {
-        // Use Wikipedia and other open APIs for search results
-        try {
-            // Get Wikipedia results
-            const wikiResponse = await fetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*&limit=5`);
-            const wikiData = await wikiResponse.json();
-            
-            const webResults = [];
-            
-            // Wikipedia results
-            if (wikiData && wikiData.query && wikiData.query.search) {
-                wikiData.query.search.forEach((item, i) => {
-                    webResults.push({
+        // Use our own Luo Search!
+        const results = window.luoSearch ? window.luoSearch.search(query) : [];
+        
+        if (results && results.length > 0) {
+            this.categories.web = results.map(item => ({
+                id: item.name.toLowerCase().replace(/\s/g, '-'),
+                name: item.name,
+                icon: this.getCategoryIcon(item.category),
+                category: 'web',
+                url: item.url,
+                description: item.keywords
+            }));
+        } else {
+            // Fallback to Wikipedia
+            try {
+                const wikiResponse = await fetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*&limit=5`);
+                const wikiData = await wikiResponse.json();
+                
+                if (wikiData && wikiData.query && wikiData.query.search) {
+                    this.categories.web = wikiData.query.search.map((item, i) => ({
                         id: `wiki-${i}`,
                         name: item.title,
                         icon: '📚',
                         category: 'web',
                         url: `https://en.wikipedia.org/wiki/${encodeURIComponent(item.title.replace(/ /g, '_'))}`,
-                        description: item.snippet.replace(/<[^>]*>/g, '').substring(0, 100)
-                    });
-                });
+                        description: item.snippet.replace(/<[^>]*>/g, '')
+                    }));
+                }
+            } catch (e) {
+                this.categories.web = [{ 
+                    id: 'web-search', 
+                    name: `Search "${query}" on Bing`, 
+                    icon: '🔍', 
+                    category: 'web', 
+                    url: `https://www.bing.com/search?q=${encodeURIComponent(query)}` 
+                }];
             }
-            
-            // If no results, add a web search link
-            if (webResults.length === 0) {
-                webResults.push({
-                    id: 'web-search',
-                    name: `Search "${query}" on Google`,
-                    icon: '🔍',
-                    category: 'web',
-                    url: `https://www.google.com/search?q=${encodeURIComponent(query)}`
-                });
-            }
-            
-            this.categories.web = webResults;
-            this.renderResults();
-            
-        } catch (e) {
-            // Fallback to Bing
-            this.categories.web = [{ 
-                id: 'web-search', 
-                name: `Search "${query}" on Bing`, 
-                icon: '🔍', 
-                category: 'web', 
-                url: `https://www.bing.com/search?q=${encodeURIComponent(query)}` 
-            }];
-            this.renderResults();
         }
+        
+        this.renderResults();
+    }
+
+    getCategoryIcon(category) {
+        const icons = {
+            search: '🔍',
+            video: '🎬',
+            social: '💬',
+            dev: '💻',
+            reference: '📚',
+            shopping: '🛒',
+            entertainment: '🎮',
+            music: '🎵',
+            ai: '🤖',
+            crypto: '🪙',
+            blog: '✍️'
+        };
+        return icons[category] || '🌐';
     }
 
     fuzzySearch(items, query) {
