@@ -1,17 +1,12 @@
 {
   "name": "luo-desktop",
   "version": "1.0.0",
-  "description": "Luo Desktop - A dual-access desktop for humans and AI agents",
+  "description": "Luo Desktop - A web desktop with AI integration",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
     "desktop": "node src/index.js",
-    "dev": "node src/index.js",
-    "test": "echo 'Error: no test specified' && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/luokai25/Luo-browser.git"
+    "dev": "node src/index.js"
   },
   "keywords": ["desktop", "browser", "ai", "agent", "luo"],
   "author": "luokai25",
