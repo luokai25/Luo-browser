@@ -60,6 +60,7 @@ class LuoDesktop{
       {id:'weather',icon:'🌤️',name:'Weather'},
       {id:'ai',icon:'🤖',name:'AI Assistant'},
       {id:'cloud',icon:'☁️',name:'Luo Cloud'},
+      {id:'vault',icon:'🔐',name:'Procedural Vault'},
     ];
     
     // Learning data
@@ -206,6 +207,8 @@ class LuoDesktop{
       c.innerHTML='<div style="padding:20px"><h2>🤖 AI Assistant</h2><p style="color:rgba(255,255,255,0.6)">Your smart helper</p><input type="text" placeholder="Ask me anything..." style="width:100%;padding:12px;background:rgba(255,255,255,0.1);border:1px solid #333;border-radius:8px;color:#fff;margin-top:20px"></div>';
     }else if(id==='cloud'){
       c.innerHTML='<iframe src="src/web/desktop/apps/cloud.html" style="width:100%;height:100%;border:none">';
+    }else if(id==='vault'){
+      c.innerHTML='<iframe src="src/web/desktop/apps/vault.html" style="width:100%;height:100%;border:none">';
     }
       c.innerHTML='<div style="padding:40px;text-align:center"><span style="font-size:60px">'+app.icon+'</span><h2>'+app.name+'</h2><p style="color:rgba(255,255,255,0.6)">App loaded - learning your preferences</p></div>';
     }

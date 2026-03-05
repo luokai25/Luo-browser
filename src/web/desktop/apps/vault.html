@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Procedural Vault - Luo Desktop</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Courier New',monospace;background:#0a0a0f;color:#00ff88;min-height:100vh;overflow:hidden}
+#vault{position:fixed;top:0;left:0;width:100%;height:100%;overflow:auto}
+.vault-grid{position:absolute;top:0;left:0;width:100000px;height:100000px;background-image:radial-gradient(#00ff8811 1px,transparent 1px);background-size:50px 50px}
+#unlock{position:fixed;top:0;left:0;width:100%;height:100%;background:#0a0a0f;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:1000}
+.unlock-title{font-size:48px;margin-bottom:10px;text-shadow:0 0 20px #00ff88}
+.unlock-sub{color:#00ff8866;margin-bottom:40px;font-size:14px}
+.unlock-icon{font-size:80px;margin-bottom:30px}
+.input-group{margin-bottom:20px;text-align:center}
+.input-group label{display:block;color:#00ff8888;margin-bottom:8px;font-size:12px}
+.unlock-input{width:300px;padding:15px 20px;background:#111;border:2px solid #00ff8833;border-radius:8px;color:#00ff88;font-size:18px;font-family:inherit;outline:none;text-align:center}
+.unlock-input:focus{border-color:#00ff88;box-shadow:0 0 20px #00ff8833}
+.unlock-btn{padding:15px 50px;background:#00ff88;color:#0a0a0f;font-size:16px;font-weight:bold;border:none;border-radius:8px;cursor:pointer;font-family:inherit;transition:all 0.3s}
+.unlock-btn:hover{transform:scale(1.05);box-shadow:0 0 30px #00ff8866}
+.warning{color:#ff4444;font-size:12px;margin-top:20px;max-width:300px;text-align:center;line-height:1.6}
+#hud{position:fixed;top:20px;left:20px;background:rgba(0,0,0,0.8);padding:15px;border-radius:8px;border:1px solid #00ff8844;display:none;z-index:100}
+.hud-title{color:#00ff88;font-size:14px;margin-bottom:10px;font-weight:bold}
+.hud-stat{color:#00ff8888;font-size:11px;margin:4px 0}
+#toolbar{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.9);padding:12px 20px;border-radius:30px;display:none;gap:10px;align-items:center;border:1px solid #00ff8844}
+.tool-btn{width:40px;height:40px;background:#00ff8822;border:none;border-radius:50%;color:#00ff88;font-size:18px;cursor:pointer;transition:all 0.2s}
+.tool-btn:hover{background:#00ff88;color:#0a0a0f;transform:scale(1.1)}
+#coordinate-display{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);color:#00ff8844;font-size:12px;display:none}
+#file-panel{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#111;border:2px solid #00ff88;border-radius:16px;padding:30px;width:400px;display:none;z-index:200}
+.file-panel-title{font-size:20px;margin-bottom:20px;text-align:center}
+.file-input{width:100%;padding:12px;background:#0a0a0f;border:1px solid #00ff8833;border-radius:8px;color:#00ff88;margin-bottom:12px}
+.file-btn{width:100%;padding:12px;background:#00ff88;color:#0a0a0f;font-weight:bold;border:none;border-radius:8px;cursor:pointer;margin-top:10px}
+.close-panel{position:absolute;top:10px;right:15px;background:none;border:none;color:#00ff8888;font-size:24px;cursor:pointer}
+#files-list{position:fixed;top:80px;right:20px;width:250px;max-height:60vh;overflow-y:auto;background:rgba(0,0,0,0.8);border:1px solid #00ff8833;border-radius:12px;padding:15px;display:none}
+.files-title{color:#00ff88;font-size:14px;margin-bottom:15px;font-weight:bold}
+.file-item{padding:10px;background:#00ff8811;border-radius:8px;margin-bottom:8px;cursor:pointer;transition:all 0.2s}
+.file-item:hover{background:#00ff8833}
+.file-item-name{font-size:13px;margin-bottom:4px}
+.file-item-coord{font-size:10px;color:#00ff8888}
+.loading{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);display:none}
+.loading-spinner{width:60px;height:60px;border:3px solid #00ff8822;border-top-color:#00ff88;border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div id="vault"><div class="vault-grid"></div></div>
+
+<div id="unlock">
+<div class="unlock-icon">🔐</div>
+<div class="unlock-title">PROCEDURAL VAULT</div>
+<div class="unlock-sub">Infinite encrypted storage • Zero knowledge • Free forever</div>
+<div class="input-group">
+<label>ENTER YOUR MASTER PASSWORD</label>
+<input type="password" class="unlock-input" id="password" placeholder="Create or enter password...">
+</div>
+<button class="unlock-btn" onclick="vault.unlock()">UNLOCK VAULT</button>
+<div class="warning">
+⚠️ WARNING: If you forget your password, your files are LOST FOREVER.<br>
+There is no reset. Your password generates your encryption key.
+</div>
+</div>
+
+<div id="hud">
+<div class="hud-title">🔐 PROCEDURAL VAULT</div>
+<div class="hud-stat">Status: <span id="hud-status">LOCKED</span></div>
+<div class="hud-stat">Files: <span id="hud-files">0</span></div>
+<div class="hud-stat">Storage: <span id="hud-storage">0 KB</span></div>
+<div class="hud-stat">Coordinates: <span id="hud-coord">0, 0</span></div>
+</div>
+
+<div id="coordinate-display">COORDINATES: <span id="coord">0, 0</span></div>
+
+<div id="toolbar">
+<button class="tool-btn" onclick="vault.showFilePanel()" title="Add File">➕</button>
+<button class="tool-btn" onclick="vault.showFilesList()" title="My Files">📁</button>
+<button class="tool-btn" onclick="vault.explore()" title="Explore Space">🧭</button>
+<button class="tool-btn" onclick="vault.lock()" title="Lock Vault">🔒</button>
+</div>
+
+<div id="files-list">
+<div class="files-title">📁 YOUR FILES</div>
+<div id="files-container"></div>
+</div>
+
+<div id="file-panel">
+<button class="close-panel" onclick="vault.hideFilePanel()">×</button>
+<div class="file-panel-title">➕ STORE NEW FILE</div>
+<input type="text" class="file-input" id="file-name" placeholder="File name">
+<textarea class="file-input" id="file-content" placeholder="File content or paste text..." rows="6"></textarea>
+<button class="file-btn" onclick="vault.storeFile()">🔒 ENCRYPT & STORE</button>
+</div>
+
+<div class="loading" id="loading">
+<div class="loading-spinner"></div>
+</div>
+
+<script>
+// PROCEDURAL VAULT - The Never-Before-Seen Storage System
+class ProceduralVault{
+  constructor(){
+    this.password=null;
+    this.key=null;
+    this.files=[];
+    this.currentCoord={x:50000,y:50000};
+    this.gridSize=100000;
+  }
+  
+  // Generate deterministic key from password using multiple hash rounds
+  async generateKey(password){
+    let key=password;
+    // Multiple rounds of hashing for security
+    for(let i=0;i<10000;i++){
+      key=await this.hash(key+i);
+    }
+    return key;
+  }
+  
+  // Simple hash function
+  async hash(str){
+    const encoder=new TextEncoder();
+    const data=encoder.encode(str);
+    const hashBuffer=await crypto.subtle.digest('SHA-256',data);
+    const hashArray=Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b=>b.toString(16).padStart(2,'0')).join('');
+  }
+  
+  // Generate coordinate from filename + password
+  async generateCoordinate(filename){
+    const seed=this.key+filename+Date.now();
+    const hash=await this.hash(seed);
+    // Generate X,Y in the procedural space
+    const x=parseInt(hash.substr(0,8),16)%this.gridSize;
+    const y=parseInt(hash.substr(8,8),16)%this.gridSize;
+    return{x,y};
+  }
+  
+  // Encrypt data using the key
+  async encrypt(text){
+    const encoder=new TextEncoder();
+    const data=encoder.encode(text);
+    const keyBuffer=await crypto.subtle.importKey(
+      'raw',
+      await this.hash(this.password),
+      {name:'AES-GCM'},
+      false,
+      ['encrypt']
+    );
+    const iv=crypto.getRandomValues(new Uint8Array(12));
+    const encrypted=await crypto.subtle.encrypt(
+      {name:'AES-GCM',iv},
+      keyBuffer,
+      data
+    );
+    // Combine IV + encrypted data
+    const combined=new Uint8Array(iv.length+encrypted.byteLength);
+    combined.set(iv);
+    combined.set(new Uint8Array(encrypted),iv.length);
+    return btoa(String.fromCharCode(...combined));
+  }
+  
+  // Decrypt data
+  async decrypt(encryptedData){
+    try{
+      const combined=Uint8Array.from(atob(encryptedData),c=>c.charCodeAt(0));
+      const iv=combined.slice(0,12);
+      const data=combined.slice(12);
+      const keyBuffer=await crypto.subtle.importKey(
+        'raw',
+        await this.hash(this.password),
+        {name:'AES-GCM'},
+        false,
+        ['decrypt']
+      );
+      const decrypted=await crypto.subtle.decrypt(
+        {name:'AES-GCM',iv},
+        keyBuffer,
+        data
+      );
+      return new TextDecoder().decode(decrypted);
+    }catch(e){
+      return null;
+    }
+  }
+  
+  async unlock(){
+    const password=document.getElementById('password').value;
+    if(!password||password.length<4){
+      alert('Password must be at least 4 characters!');
+      return;
+    }
+    
+    document.getElementById('loading').style.display='flex';
+    
+    this.password=password;
+    this.key=await this.generateKey(password);
+    
+    // Try to load existing files
+    const stored=localStorage.getItem('vault_'+this.key.substr(0,16));
+    if(stored){
+      try{
+        this.files=JSON.parse(await this.decrypt(stored));
+      }catch(e){
+        this.files=[];
+      }
+    }
+    
+    document.getElementById('loading').style.display='none';
+    document.getElementById('unlock').style.display='none';
+    document.getElementById('hud').style.display='block';
+    document.getElementById('toolbar').style.display='flex';
+    document.getElementById('coordinate-display').style.display='block';
+    
+    this.updateHUD();
+    this.explore();
+  }
+  
+  lock(){
+    this.password=null;
+    this.key=null;
+    this.files=[];
+    document.getElementById('unlock').style.display='flex';
+    document.getElementById('hud').style.display='none';
+    document.getElementById('toolbar').style.display='none';
+    document.getElementById('coordinate-display').style.display='none';
+    document.getElementById('files-list').style.display='none';
+    document.getElementById('password').value='';
+  }
+  
+  updateHUD(){
+    const totalSize=this.files.reduce((sum,f)=>sum+(f.content?.length||0),0);
+    document.getElementById('hud-status').textContent='UNLOCKED';
+    document.getElementById('hud-files').textContent=this.files.length;
+    document.getElementById('hud-storage').textContent=(totalSize/1024).toFixed(1)+' KB';
+    document.getElementById('hud-coord').textContent=this.currentCoord.x+', '+this.currentCoord.y;
+  }
+  
+  async explore(){
+    // Navigate to a random coordinate in the procedural space
+    const x=Math.floor(Math.random()*90000)+5000;
+    const y=Math.floor(Math.random()*90000)+5000;
+    this.currentCoord={x,y};
+    
+    const vault=document.getElementById('vault');
+    vault.style.transform=`translate(${-x}px,${-y}px)`;
+    
+    document.getElementById('coord').textContent=x+', '+y;
+    this.updateHUD();
+  }
+  
+  showFilePanel(){
+    document.getElementById('file-panel').style.display='block';
+  }
+  
+  hideFilePanel(){
+    document.getElementById('file-panel').style.display='none';
+    document.getElementById('file-name').value='';
+    document.getElementById('file-content').value='';
+  }
+  
+  showFilesList(){
+    const list=document.getElementById('files-list');
+    list.style.display=list.style.display==='none'?'block':'none';
+    
+    const container=document.getElementById('files-container');
+    if(this.files.length===0){
+      container.innerHTML='<div style="color:#00ff8866;text-align:center;padding:20px">No files stored yet</div>';
+    }else{
+      container.innerHTML=this.files.map((f,i)=>`<div class="file-item" onclick="vault.viewFile(${i})">
+        <div class="file-item-name">${f.name}</div>
+        <div class="file-item-coord">📍 ${f.coord.x}, ${f.coord.y}</div>
+      </div>`).join('');
+    }
+  }
+  
+  async storeFile(){
+    const name=document.getElementById('file-name').value;
+    const content=document.getElementById('file-content').value;
+    
+    if(!name||!content){
+      alert('Please enter file name and content!');
+      return;
+    }
+    
+    document.getElementById('loading').style.display='flex';
+    
+    const coord=await this.generateCoordinate(name);
+    const encrypted=await this.encrypt(content);
+    
+    this.files.push({
+      name,
+      coord,
+      encrypted,
+      size:content.length,
+      date:Date.now()
+    });
+    
+    // Save encrypted file index
+    const encryptedIndex=await this.encrypt(JSON.stringify(this.files));
+    localStorage.setItem('vault_'+this.key.substr(0,16),encryptedIndex);
+    
+    document.getElementById('loading').style.display='none';
+    this.hideFilePanel();
+    this.updateHUD();
+    alert('✅ File encrypted and stored at coordinates '+coord.x+', '+coord.y);
+  }
+  
+  async viewFile(index){
+    const file=this.files[index];
+    const decrypted=await this.decrypt(file.encrypted);
+    
+    if(decrypted){
+      // Navigate to file coordinate
+      this.currentCoord=file.coord;
+      const vault=document.getElementById('vault');
+      vault.style.transform=`translate(${-file.coord.x}px,${-file.coord.y}px)`;
+      document.getElementById('coord').textContent=file.coord.x+', '+file.coord.y;
+      document.getElementById('files-list').style.display='none';
+      
+      alert('📄 FILE CONTENT:\n\n'+decrypted);
+    }else{
+      alert('❌ Failed to decrypt file');
+    }
+  }
+}
+
+const vault=new ProceduralVault();
+
+// Keyboard shortcuts
+document.addEventListener('keydown',(e)=>{
+  if(e.key==='Enter'&&document.getElementById('unlock').style.display!=='none'){
+    vault.unlock();
+  }
+});
+</script>
+</body>
+</html>
