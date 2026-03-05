@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Files - Luo Desktop</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui;background:#1a1a24;color:#fff;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+#header{background:#252532;padding:12px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #333}
+#path{font-size:14px;color:#8ab4f8}
+#path span{cursor:pointer;padding:2px 6px;border-radius:4px}
+#path span:hover{background:rgba(138,180,248,0.2)}
+#search{flex:1;padding:8px 16px;background:#1a1a24;border:1px solid #333;border-radius:20px;color:#fff;font-size:14px;outline:none}
+#search:focus{border-color:#8ab4f8}
+#toolbar{background:#252532;padding:8px 16px;display:flex;gap:8px;border-bottom:1px solid #333}
+.tool-btn{padding:6px 12px;background:none;border:1px solid #333;border-radius:6px;color:#aaa;font-size:12px;cursor:pointer}
+.tool-btn:hover{background:#333;color:#fff}
+.tool-btn.active{background:#8ab4f8;color:#000;border-color:#8ab4f8}
+#main{display:flex;flex:1;overflow:hidden}
+#sidebar{width:200px;background:#1e1e2a;padding:12px;border-right:1px solid #333}
+.sidebar-item{padding:10px 12px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:13px;color:#aaa;margin-bottom:4px}
+.sidebar-item:hover{background:rgba(255,255,255,0.05)}
+.sidebar-item.active{background:rgba(138,180,248,0.15);color:#8ab4f8}
+.sidebar-icon{font-size:18px}
+#content{flex:1;padding:16px;overflow-y:auto}
+#predictions{background:linear-gradient(135deg,#2a2a3d,#1e1e2a);padding:16px;border-radius:12px;margin-bottom:20px}
+.pred-title{font-size:12px;color:#8ab4f8;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.pred-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
+.pred-card{background:#1a1a24;padding:16px;border-radius:10px;cursor:pointer;transition:all 0.2s;border:1px solid transparent}
+.pred-card:hover{background:#252532;transform:translateY(-2px);border-color:#8ab4f8}
+.pred-icon{font-size:32px;margin-bottom:8px}
+.pred-name{font-size:13px;font-weight:500;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pred-reason{font-size:11px;color:#666}
+.pred-score{font-size:10px;color:#8ab4f8;margin-top:8px}
+#files{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px}
+.file{background:#1e1e2a;padding:16px;border-radius:10px;cursor:pointer;text-align:center;transition:all 0.2s;border:1px solid transparent}
+.file:hover{background:#252532;border-color:#444;transform:scale(1.02)}
+.file.selected{background:#2a2a3d;border-color:#8ab4f8}
+.file-icon{font-size:36px;margin-bottom:8px}
+.file-name{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.file-meta{font-size:10px;color:#666;margin-top:4px}
+#empty{text-align:center;padding:60px;color:#666}
+#empty-icon{font-size:64px;margin-bottom:16px}
+</style>
+</head>
+<body>
+<div id="header">
+<span id="path"><span onclick="goHome()">🏠 Home</span></span>
+<input type="text" id="search" placeholder="Search files...">
+</div>
+<div id="toolbar">
+<button class="tool-btn active" onclick="setView('grid')">▦ Grid</button>
+<button class="tool-btn" onclick="setView('list')">☰ List</button>
+<button class="tool-btn" onclick="togglePredictions()">🧠 Predictions</button>
+<button class="tool-btn" onclick="clearHistory()">🗑️ Clear History</button>
+</div>
+<div id="main">
+<div id="sidebar">
+<div class="sidebar-item active" onclick="goHome()"><span class="sidebar-icon">🏠</span>Home</div>
+<div class="sidebar-item" onclick="goTo('documents')"><span class="sidebar-icon">📄</span>Documents</div>
+<div class="sidebar-item" onclick="goTo('downloads')"><span class="sidebar-icon">⬇️</span>Downloads</div>
+<div class="sidebar-item" onclick="goTo('images')"><span class="sidebar-icon">🖼️</span>Images</div>
+<div class="sidebar-item" onclick="goTo('music')"><span class="sidebar-icon">🎵</span>Music</div>
+<div class="sidebar-item" onclick="goTo('videos')"><span class="sidebar-icon">🎬</span>Videos</div>
+<div class="sidebar-item" onclick="goTo('code')"><span class="sidebar-icon">💻</span>Code</div>
+</div>
+<div id="content">
+<div id="predictions">
+<div class="pred-title">🧠 Smart Predictions - Based on your usage</div>
+<div class="pred-grid" id="pred-grid"></div>
+</div>
+<div id="files"></div>
+</div>
+</div>
+<script>
+// File Prediction System
+class FilePredictor{
+  constructor(){
+    this.fileHistory=JSON.parse(localStorage.getItem('luo-file-history')||'[]');
+    this.fileStats=JSON.parse(localStorage.getItem('luo-file-stats')||'{}');
+    this.predictions=[];
+    this.currentPath='home';
+    this.init();
+  }
+  
+  init(){
+    this.processHistory();
+    this.predict();
+    this.renderPredictions();
+  }
+  
+  // Learn: Track file access
+  learn(file){
+    const now=Date.now();
+    const hour=new Date().getHours();
+    const day=new Date().getDay();
+    
+    // Add to history
+    this.fileHistory.unshift({
+      name:file.name,
+      path:file.path,
+      type:file.type,
+      time:now,
+      hour:hour,
+      day:day
+    });
+    this.fileHistory=this.fileHistory.slice(0,500);
+    
+    // Update stats
+    const key=file.path||file.name;
+    this.fileStats[key]=this.fileStats[key]||{count:0,lastUsed:0,hours:{},days:{}};
+    this.fileStats[key].count++;
+    this.fileStats[key].lastUsed=now;
+    this.fileStats[key].hours[hour]=(this.fileStats[key].hours[hour]||0)+1;
+    this.fileStats[key].days[day]=(this.fileStats[key].days[day]||0)+1;
+    
+    this.save();
+    this.predict();
+  }
+  
+  processHistory(){
+    // Re-process history into stats
+    this.fileHistory.forEach(f=>{
+      const key=f.path||f.name;
+      if(!this.fileStats[key]){
+        this.fileStats[key]={count:0,lastUsed:0,hours:{},days:{}};
+      }
+    });
+  }
+  
+  // Predict: Calculate scores for each file
+  predict(){
+    const now=Date.now();
+    const hour=new Date().getHours();
+    const day=new Date().getDay();
+    
+    // Mock files for demo
+    const mockFiles=[
+      {name:'Report.docx',path:'documents',type:'doc',icon:'📄'},
+      {name:'Project.zip',path:'downloads',type:'zip',icon:'📦'},
+      {name:'Photo.jpg',path:'images',type:'image',icon:'🖼️'},
+      {name:'Song.mp3',path:'music',type:'audio',icon:'🎵'},
+      {name:'Video.mp4',path:'videos',type:'video',icon:'🎬'},
+      {name:'Notes.txt',path:'documents',type:'text',icon:'📝'},
+      {name:'Code.js',path:'code',type:'code',icon:'💻'},
+      {name:'Budget.xlsx',path:'documents',type:'spreadsheet',icon:'📊'},
+      {name:'Presentation.ppt',path:'documents',type:'presentation',icon:'📽️'},
+      {name:'Backup.tar',path:'downloads',type:'archive',icon:'📦'},
+    ];
+    
+    this.predictions=mockFiles.map(file=>{
+      const key=file.path+'/'+file.name;
+      const stats=this.fileStats[key]||{};
+      
+      // Calculate prediction score
+      let score=0;
+      
+      // Recency score (more recent = higher)
+      if(stats.lastUsed){
+        const hoursSince=(now-stats.lastUsed)/(1000*60*60);
+        score+=Math.max(0,100-hoursSince*2);
+      }
+      
+      // Frequency score
+      score+=stats.count*10;
+      
+      // Time pattern (use at same hour)
+      if(stats.hours[hour]){
+        score+=stats.hours[hour]*15;
+      }
+      
+      // Day pattern
+      if(stats.days[day]){
+        score+=stats.days[day]*5;
+      }
+      
+      // Random boost for demo (new files get some visibility)
+      if(!stats.count){
+        score+=Math.random()*20;
+      }
+      
+      return {...file,score,reason:this.getReason(stats, hour)};
+    });
+    
+    // Sort by score
+    this.predictions.sort((a,b)=>b.score-a.score);
+  }
+  
+  getReason(stats,hour){
+    if(!stats.count)return'New file';
+    if(stats.count>10)return'Frequently used';
+    if(stats.hours[hour])return'Used at this hour';
+    return'Recently used';
+  }
+  
+  renderPredictions(){
+    const grid=document.getElementById('pred-grid');
+    const top=this.predictions.slice(0,6);
+    
+    grid.innerHTML=top.map(f=>'<div class="pred-card" onclick="openFile(\''+f.path+'/'+f.name+'\')"><div class="pred-icon">'+f.icon+'</div><div class="pred-name">'+f.name+'</div><div class="pred-reason">'+f.reason+'</div><div class="pred-score">★ '+Math.round(f.score)</div></div>').join('');
+  }
+  
+  save(){
+    localStorage.setItem('luo-file-history',JSON.stringify(this.fileHistory));
+    localStorage.setItem('luo-file-stats',JSON.stringify(this.fileStats));
+  }
+  
+  getFiles(path){
+    // Mock file system
+    const files={
+      home:[
+        {name:'Documents',path:'documents',type:'folder',icon:'📁'},
+        {name:'Downloads',path:'downloads',type:'folder',icon:'📁'},
+        {name:'Images',path:'images',type:'folder',icon:'📁'},
+        {name:'Music',path:'music',type:'folder',icon:'📁'},
+        {name:'Videos',path:'videos',type:'folder',icon:'📁'},
+      ],
+      documents:[
+        {name:'Report.docx',type:'doc',icon:'📄'},
+        {name:'Notes.txt',type:'text',icon:'📝'},
+        {name:'Budget.xlsx',type:'spreadsheet',icon:'📊'},
+        {name:'Presentation.ppt',type:'presentation',icon:'📽️'},
+      ],
+      downloads:[
+        {name:'Project.zip',type:'zip',icon:'📦'},
+        {name:'Video.mp4',type:'video',icon:'🎬'},
+        {name:'Image.jpg',type:'image',icon:'🖼️'},
+      ],
+      images:[
+        {name:'Photo1.jpg',type:'image',icon:'🖼️'},
+        {name:'Screenshot.png',type:'image',icon:'🖼️'},
+        {name:'Wallpaper.jpg',type:'image',icon:'🖼️'},
+      ],
+      music:[
+        {name:'Song1.mp3',type:'audio',icon:'🎵'},
+        {name:'Playlist.m3u',type:'playlist',icon:'🎶'},
+      ],
+      videos:[
+        {name:'Movie.mp4',type:'video',icon:'🎬'},
+        {name:'Tutorial.mkv',type:'video',icon:'🎬'},
+      ],
+      code:[
+        {name:'index.html',type:'code',icon:'💻'},
+        {name:'style.css',type:'code',icon:'🎨'},
+        {name:'script.js',type:'code',icon:'⚡'},
+      ],
+    };
+    return files[path]||files.home;
+  }
+  
+  renderFiles(path){
+    const files=this.getFiles(path);
+    const content=document.getElementById('files');
+    
+    content.innerHTML=files.map(f=>'<div class="file" onclick="filePredictor.learn({name:\''+f.name+'\',path:\''+(f.path||path)+'\',type:\''+f.type+'\'});openFile(\''+f.name+'\')"><div class="file-icon">'+f.icon+'</div><div class="file-name">'+f.name+'</div><div class="file-meta">'+(f.type||'file')+'</div></div>').join('');
+  }
+}
+
+const filePredictor=new FilePredictor();
+
+function goHome(){
+  filePredictor.currentPath='home';
+  document.getElementById('path').innerHTML='<span onclick="goHome()">🏠 Home</span>';
+  filePredictor.renderFiles('home');
+}
+
+function goTo(path){
+  filePredictor.currentPath=path;
+  document.getElementById('path').innerHTML='<span onclick="goHome()">🏠 Home</span> / <span>'+path+'</span>';
+  filePredictor.renderFiles(path);
+}
+
+function openFile(name){
+  console.log('Opening:',name);
+  // Learn this file
+  filePredictor.learn({name:name,path:filePredictor.currentPath,type:'file'});
+}
+
+function setView(view){
+  document.querySelectorAll('.tool-btn').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+function togglePredictions(){
+  const p=document.getElementById('predictions');
+  p.style.display=p.style.display==='none'?'block':'none';
+}
+
+function clearHistory(){
+  if(confirm('Clear all file history?')){
+    localStorage.removeItem('luo-file-history');
+    localStorage.removeItem('luo-file-stats');
+    location.reload();
+  }
+}
+
+// Initial render
+filePredictor.renderFiles('home');
+</script>
+</body>
+</html>

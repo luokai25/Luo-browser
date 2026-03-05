@@ -191,7 +191,9 @@ class LuoDesktop{
     const c=document.getElementById('win-'+id);
     if(id==='browser'){
       c.innerHTML='<iframe src="browser.html" style="width:100%;height:100%;border:none">';
-    }else if(id==='weather'){
+    }else if(id==='files'){
+      c.innerHTML='<iframe src="src/web/desktop/apps/files.html" style="width:100%;height:100%;border:none">';
+    }
       const temp=Math.round(15+Math.random()*15);
       c.innerHTML='<div style="text-align:center;padding:60px"><span style="font-size:80px">🌤️</span><h2 style="font-size:48px;margin:20px 0">'+temp+'°C</h2><p style="color:rgba(255,255,255,0.6)">Based on your location</p></div>';
     }else if(id==='calendar'){
