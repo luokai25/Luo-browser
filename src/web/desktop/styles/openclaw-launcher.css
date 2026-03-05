@@ -1,0 +1,184 @@
+/* OpenClaw Launcher Styles */
+.openclaw-launcher {
+    padding: 20px;
+    height: 100%;
+    overflow-y: auto;
+}
+
+.launcher-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.launcher-icon {
+    font-size: 48px;
+}
+
+.launcher-header h2 {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.launcher-status {
+    margin-bottom: 25px;
+}
+
+.status-card {
+    background: rgba(255,255,255,0.05);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.status-label {
+    color: rgba(255,255,255,0.6);
+    font-size: 14px;
+}
+
+.status-value {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.status-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #666;
+    margin-left: auto;
+}
+
+.status-indicator.online {
+    background: #34d399;
+    box-shadow: 0 0 10px #34d399;
+}
+
+.status-indicator.offline {
+    background: #f87171;
+}
+
+.launcher-actions {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 25px;
+}
+
+.launcher-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 15px 20px;
+    border: none;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+}
+
+.launcher-btn:hover {
+    background: rgba(255,255,255,0.2);
+    transform: translateY(-2px);
+}
+
+.launcher-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.launcher-btn.primary {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+}
+
+.launcher-btn.primary:hover {
+    background: linear-gradient(135deg, #5558e3, #7c4de4);
+}
+
+.launcher-btn.success {
+    background: linear-gradient(135deg, #10b981, #34d399);
+}
+
+.launcher-info {
+    background: rgba(255,255,255,0.03);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.launcher-info h3 {
+    font-size: 16px;
+    margin: 0 0 12px 0;
+}
+
+.launcher-info p {
+    color: rgba(255,255,255,0.7);
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 15px  0 00;
+}
+
+.feature-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.feature {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.8);
+}
+
+.feature-icon {
+    font-size: 18px;
+}
+
+.launcher-terminal {
+    background: #0d1117;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-top: 20px;
+}
+
+.terminal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    background: rgba(255,255,255,0.05);
+    font-size: 13px;
+    color: rgba(255,255,255,0.6);
+}
+
+.terminal-close {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.6);
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.terminal-body {
+    padding: 15px;
+    font-family: 'Consolas', monospace;
+    font-size: 13px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.terminal-line {
+    color: #c9d1d9;
+    margin-bottom: 4px;
+    white-space: pre-wrap;
+}

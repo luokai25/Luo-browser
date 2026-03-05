@@ -85,6 +85,7 @@
                     { id: 'timeline', icon: '📊', name: 'Timeline' },
                     { id: 'devtools', icon: '🛠️', name: 'Dev Tools' },
                     { id: 'monitor', icon: '📈', name: 'Monitor' },
+                    { id: 'openclaw', icon: '🦞', name: 'OpenClaw' },
                 ];
 
                 const container = document.getElementById('desktop-icons');
@@ -129,6 +130,7 @@
                     timeline: { title: 'Timeline', icon: '📊', content: this.getTimelineContent() },
                     devtools: { title: 'Dev Tools', icon: '🛠️', content: this.getDevToolsContent() },
                     monitor: { title: 'Monitor', icon: '📈', content: this.getMonitorContent() },
+                    openclaw: { title: 'OpenClaw Launcher', icon: '🦞', content: this.getOpenClawContent() },
                 };
 
                 const config = appConfigs[appName] || { title: appName, icon: '📦', content: '<p>App content</p>' };
@@ -469,6 +471,91 @@
                 return `
                     <div class="app-monitor">
                         ${window.systemMonitor.renderDetailed()}
+                    </div>
+                `;
+            }
+
+            getOpenClawContent() {
+                return `
+                    <div class="openclaw-launcher" id="openclaw-app">
+                        <div style="padding: 20px;">
+                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px;">
+                                <span style="font-size: 48px;">🦞</span>
+                                <h2 style="font-size: 24px; margin: 0;">OpenClaw Launcher</h2>
+                            </div>
+                            
+                            <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 20px; margin-bottom: 25px;">
+                                <div style="display: flex; align-items: center; gap: 15px;">
+                                    <span style="color: rgba(255,255,255,0.6); font-size: 14px;">Status</span>
+                                    <span style="font-size: 18px; font-weight: 600;" id="oc-status-text">Checking...</span>
+                                    <div id="oc-indicator" style="width: 12px; height: 12px; border-radius: 50%; background: #666; margin-left: auto;"></div>
+                                </div>
+                            </div>
+                            
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 25px;">
+                                <button id="oc-install" style="display: flex; align-items: center; justify-content: center; gap: 10px; padding: 15px 20px; border: none; border-radius: 12px; font-size: 14px; cursor: pointer; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white;">
+                                    ⚡ Install OpenClaw
+                                </button>
+                                <button id="oc-start" style="display: flex; align-items: center; justify-content: center; gap: 10px; padding: 15px 20px; border: none; border-radius: 12px; font-size: 14px; cursor: pointer; background: rgba(255,255,255,0.1); color: white;">
+                                    ▶️ Start Gateway
+                                </button>
+                                <button id="oc-setup" style="display: flex; align-items: center; justify-content: center; gap: 10px; padding: 15px 20px; border: none; border-radius: 12px; font-size: 14px; cursor: pointer; background: rgba(255,255,255,0.1); color: white;">
+                                    ⚙️ Setup Wizard
+                                </button>
+                                <button id="oc-refresh" style="display: flex; align-items: center; justify-content: center; gap: 10px; padding: 15px 20px; border: none; border-radius: 12px; font-size: 14px; cursor: pointer; background: rgba(255,255,255,0.1); color: white;">
+                                    🔄 Refresh
+                                </button>
+                            </div>
+                            
+                            <div style="background: rgba(255,255,255,0.03); border-radius: 12px; padding: 20px;">
+                                <h3 style="font-size: 16px; margin: 0 0 12px 0;">What is OpenClaw?</h3>
+                                <p style="color: rgba(255,255,255,0.7); font-size: 14px; line-height: 1.6; margin: 0;">OpenClaw is your personal AI assistant that runs locally. Connect to OpenAI, Anthropic, and more to give Wayne real intelligence!</p>
+                            </div>
+                            
+                            <div id="oc-terminal" style="display: none; background: #0d1117; border-radius: 12px; overflow: hidden; margin-top: 20px;">
+                                <div style="display: flex; justify-content: space-between; padding: 10px 15px; background: rgba(255,255,255,0.05); font-size: 13px; color: rgba(255,255,255,0.6);">
+                                    <span>Terminal</span>
+                                    <span style="cursor: pointer;" id="oc-terminal-close">✕</span>
+                                </div>
+                                <div id="oc-terminal-body" style="padding: 15px; font-family: monospace; font-size: 13px; max-height: 150px; overflow-y: auto;"></div>
+                            </div>
+                        </div>
+                        <script>
+                            (function() {
+                                const checkStatus = async () => {
+                                    const statusText = document.getElementById('oc-status-text');
+                                    const indicator = document.getElementById('oc-indicator');
+                                    try {
+                                        const response = await fetch('http://127.0.0.1:18789/api/status');
+                                        if (response.ok) {
+                                            statusText.textContent = 'Running ✅';
+                                            indicator.style.background = '#34d399';
+                                            return;
+                                        }
+                                    } catch (e) {}
+                                    statusText.textContent = 'Stopped';
+                                    indicator.style.background = '#f87171';
+                                };
+                                
+                                const showTerminal = () => document.getElementById('oc-terminal').style.display = 'block';
+                                const log = (text) => {
+                                    const body = document.getElementById('oc-terminal-body');
+                                    const line = document.createElement('div');
+                                    line.style.color = '#c9d1d9';
+                                    line.style.marginBottom = '4px';
+                                    line.textContent = text;
+                                    body.appendChild(line);
+                                    body.scrollTop = body.scrollHeight;
+                                };
+                                
+                                document.getElementById('oc-install')?.addEventListener('click', () => { showTerminal(); log('🚀 Install: npm install -g openclaw'); log('Then: openclaw onboard'); });
+                                document.getElementById('oc-start')?.addEventListener('click', () => { showTerminal(); log('▶️ Run: openclaw gateway'); });
+                                document.getElementById('oc-setup')?.addEventListener('click', () => { showTerminal(); log('⚙️ Run: openclaw onboard'); });
+                                document.getElementById('oc-refresh')?.addEventListener('click', checkStatus);
+                                document.getElementById('oc-terminal-close')?.addEventListener('click', () => document.getElementById('oc-terminal').style.display = 'none');
+                                checkStatus();
+                            })();
+                        </script>
                     </div>
                 `;
             }

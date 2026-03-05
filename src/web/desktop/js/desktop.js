@@ -59,7 +59,8 @@ class LuoDesktop {
             trading: { title: 'Trading', icon: '📈' },
             agent: { title: 'AI Agent', icon: '🤖' },
             notepad: { title: 'Notepad', icon: '📝' },
-            calculator: { title: 'Calculator', icon: '🧮' }
+            calculator: { title: 'Calculator', icon: '🧮' },
+            openclaw: { title: 'OpenClaw Launcher', icon: '🦞' }
         };
 
         const appInfo = appTitles[appName] || { title: appName, icon: '📦' };
@@ -258,6 +259,136 @@ class LuoDesktop {
                     <button style="padding: 15px; font-size: 18px; border: none; border-radius: 8px; background: rgba(255,255,255,0.1); color: white; cursor: pointer;">.</button>
                     <button style="padding: 15px; font-size: 18px; border: none; border-radius: 8px; background: #34d399; color: white; cursor: pointer;">=</button>
                 </div>
+            `,
+            openclaw: `
+                <div class="openclaw-launcher" id="openclaw-app">
+                    <div style="padding: 20px;">
+                        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px;">
+                            <span style="font-size: 48px;">🦞</span>
+                            <h2 style="font-size: 24px; margin: 0;">OpenClaw Launcher</h2>
+                        </div>
+                        
+                        <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 20px; margin-bottom: 25px;">
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <span style="color: rgba(255,255,255,0.6); font-size: 14px;">Status</span>
+                                <span style="font-size: 18px; font-weight: 600;" id="oc-status-text">Checking...</span>
+                                <div id="oc-indicator" style="width: 12px; height: 12px; border-radius: 50%; background: #666; margin-left: auto;"></div>
+                            </div>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 25px;">
+                            <button class="oc-btn primary" id="oc-install" style="display: flex; align-items: center; justify-content: center; gap: 10px; padding: 15px 20px; border: none; border-radius: 12px; font-size: 14px; cursor: pointer; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white;">
+                                ⚡ Install OpenClaw
+                            </button>
+                            <button class="oc-btn" id="oc-start" style="display: flex; align-items: center; justify-content: center; gap: 10px; padding: 15px 20px; border: none; border-radius: 12px; font-size: 14px; cursor: pointer; background: rgba(255,255,255,0.1); color: white;">
+                                ▶️ Start Gateway
+                            </button>
+                            <button class="oc-btn" id="oc-setup" style="display: flex; align-items: center; justify-content: center; gap: 10px; padding: 15px 20px; border: none; border-radius: 12px; font-size: 14px; cursor: pointer; background: rgba(255,255,255,0.1); color: white;">
+                                ⚙️ Setup Wizard
+                            </button>
+                            <button class="oc-btn" id="oc-refresh" style="display: flex; align-items: center; justify-content: center; gap: 10px; padding: 15px 20px; border: none; border-radius: 12px; font-size: 14px; cursor: pointer; background: rgba(255,255,255,0.1); color: white;">
+                                🔄 Refresh
+                            </button>
+                        </div>
+                        
+                        <div style="background: rgba(255,255,255,0.03); border-radius: 12px; padding: 20px;">
+                            <h3 style="font-size: 16px; margin: 0 0 12px 0;">What is OpenClaw?</h3>
+                            <p style="color: rgba(255,255,255,0.7); font-size: 14px; line-height: 1.6; margin: 0;">OpenClaw is your personal AI assistant that runs locally. Connect to OpenAI, Anthropic, and more to give Wayne real intelligence!</p>
+                            
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 15px;">
+                                <div style="display: flex; align-items: center; gap: 8px; font-size: 13px;">💬 Chat with real AI</div>
+                                <div style="display: flex; align-items: center; gap: 8px; font-size: 13px;">🔗 20+ channels</div>
+                                <div style="display: flex; align-items: center; gap: 8px; font-size: 13px;">🧠 Powerful agents</div>
+                                <div style="display: flex; align-items: center; gap: 8px; font-size: 13px;">🔒 Your data stays local</div>
+                            </div>
+                        </div>
+                        
+                        <div id="oc-terminal" style="display: none; background: #0d1117; border-radius: 12px; overflow: hidden; margin-top: 20px;">
+                            <div style="display: flex; justify-content: space-between; padding: 10px 15px; background: rgba(255,255,255,0.05); font-size: 13px; color: rgba(255,255,255,0.6);">
+                                <span>Terminal</span>
+                                <span style="cursor: pointer;" id="oc-terminal-close">✕</span>
+                            </div>
+                            <div id="oc-terminal-body" style="padding: 15px; font-family: monospace; font-size: 13px; max-height: 150px; overflow-y: auto;"></div>
+                        </div>
+                    </div>
+                </div>
+                <script>
+                    (function() {
+                        // OpenClaw App Logic
+                        const checkStatus = async () => {
+                            const statusText = document.getElementById('oc-status-text');
+                            const indicator = document.getElementById('oc-indicator');
+                            
+                            try {
+                                const response = await fetch('http://127.0.0.1:18789/api/status');
+                                if (response.ok) {
+                                    statusText.textContent = 'Running ✅';
+                                    indicator.style.background = '#34d399';
+                                    indicator.style.boxShadow = '0 0 10px #34d399';
+                                    return;
+                                }
+                            } catch (e) {}
+                            
+                            statusText.textContent = 'Stopped';
+                            indicator.style.background = '#f87171';
+                        };
+                        
+                        const showTerminal = () => {
+                            document.getElementById('oc-terminal').style.display = 'block';
+                        };
+                        
+                        const log = (text) => {
+                            const body = document.getElementById('oc-terminal-body');
+                            const line = document.createElement('div');
+                            line.style.color = '#c9d1d9';
+                            line.style.marginBottom = '4px';
+                            line.textContent = text;
+                            body.appendChild(line);
+                            body.scrollTop = body.scrollHeight;
+                        };
+                        
+                        document.getElementById('oc-install').addEventListener('click', () => {
+                            showTerminal();
+                            log('🚀 Opening installation instructions...');
+                            log('');
+                            log('📋 Step 1: Open Command Prompt as Administrator');
+                            log('📋 Step 2: Run: npm install -g openclaw');
+                            log('📋 Step 3: Run: openclaw onboard');
+                            log('');
+                            log('This will install OpenClaw globally!');
+                        });
+                        
+                        document.getElementById('oc-start').addEventListener('click', () => {
+                            showTerminal();
+                            log('▶️ To start OpenClaw Gateway:');
+                            log('');
+                            log('1. Open Command Prompt');
+                            log('2. Run: openclaw gateway');
+                            log('');
+                            log('Or for background: openclaw gateway --daemon');
+                        });
+                        
+                        document.getElementById('oc-setup').addEventListener('click', () => {
+                            showTerminal();
+                            log('⚙️ OpenClaw Setup Wizard');
+                            log('');
+                            log('Run: openclaw onboard');
+                            log('');
+                            log('This will guide you through:');
+                            log('• Selecting AI provider');
+                            log('• Entering API keys');
+                            log('• Configuring channels');
+                        });
+                        
+                        document.getElementById('oc-refresh').addEventListener('click', checkStatus);
+                        document.getElementById('oc-terminal-close').addEventListener('click', () => {
+                            document.getElementById('oc-terminal').style.display = 'none';
+                        });
+                        
+                        // Check status on load
+                        checkStatus();
+                    })();
+                </script>
             `
         };
 
