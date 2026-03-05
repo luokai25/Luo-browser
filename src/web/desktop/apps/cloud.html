@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Luo Cloud</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui;background:#0f172a;color:#fff;min-height:100vh}
+#header{background:linear-gradient(135deg,#1e3a5f,#0f172a);padding:30px;text-align:center}
+#logo{font-size:48px;margin-bottom:10px}
+#title{font-size:32px;font-weight:300;margin-bottom:8px}
+#subtitle{color:rgba(255,255,255,0.6);font-size:14px}
+#stats{background:#1e293b;padding:20px;display:flex;justify-content:center;gap:40px;border-bottom:1px solid #334155}
+.stat{text-align:center}
+.stat-value{font-size:28px;font-weight:600;color:#38bdf8}
+.stat-label{font-size:12px;color:#94a3b8;margin-top:4px}
+#storage-bar{background:#1e293b;padding:20px 40px;border-bottom:1px solid #334155}
+.bar-container{background:#334155;height:24px;border-radius:12px;overflow:hidden;margin:10px 0}
+.bar-used{height:100%;background:linear-gradient(90deg,#38bdf8,#818cf8);width:0%;transition:width 0.5s}
+.bar-labels{display:flex;justify-content:space-between;font-size:12px;color:#94a3b8}
+#upload-area{padding:40px;text-align:center;border:2px dashed #334155;margin:20px;border-radius:16px;transition:all 0.3s;cursor:pointer}
+#upload-area:hover{border-color:#38bdf8;background:rgba(56,189,248,0.05)}
+#upload-area.dragover{border-color:#38bdf8;background:rgba(56,189,248,0.1)}
+.upload-icon{font-size:48px;margin-bottom:16px}
+.upload-text{font-size:16px;margin-bottom:8px}
+.upload-hint{font-size:12px;color:#94a3b8}
+#files{padding:20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}
+.file-card{background:#1e293b;border-radius:12px;padding:16px;cursor:pointer;transition:all 0.2s;border:1px solid transparent}
+.file-card:hover{background:#334155;transform:translateY(-2px);border-color:#38bdf8}
+.file-icon{font-size:36px;margin-bottom:12px}
+.file-name{font-size:14px;font-weight:500;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.file-size{font-size:12px;color:#94a3b8}
+.file-date{font-size:11px;color:#64748b;margin-top:8px}
+.file-actions{display:flex;gap:8px;margin-top:12px}
+.file-btn{padding:6px 12px;background:#334155;border:none;border-radius:6px;color:#fff;font-size:11px;cursor:pointer}
+.file-btn:hover{background:#475569}
+.file-btn.delete{background:#dc2626}
+#plans{background:#1e293b;padding:40px;border-top:1px solid #334155}
+.plans-title{text-align:center;font-size:24px;margin-bottom:30px}
+.plans-grid{display:flex;justify-content:center;gap:20px;flex-wrap:wrap}
+.plan{background:#0f172a;border-radius:16px;padding:30px;text-align:center;min-width:200px;border:1px solid #334155}
+.plan.popular{border-color:#38bdf8;position:relative}
+.plan.popular::before{content:'Popular';position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:#38bdf8;color:#000;padding:4px 12px;border-radius:12px;font-size:11px;font-weight:600}
+.plan-name{font-size:18px;margin-bottom:8px}
+.plan-price{font-size:36px;font-weight:700;color:#38bdf8}
+.plan-price span{font-size:14px;color:#94a3b8;font-weight:400}
+.plan-storage{font-size:14px;color:#94a3b8;margin:16px 0}
+.plan-features{text-align:left;font-size:13px;color:#94a3b8;margin:20px 0}
+.plan-btn{padding:12px 24px;background:#38bdf8;border:none;border-radius:8px;color:#000;font-weight:600;cursor:pointer;width:100%}
+.plan-btn:hover{opacity:0.9}
+.plan-btn.outline{background:transparent;border:1px solid #38bdf8;color:#38bdf8}
+</style>
+</head>
+<body>
+<div id="header">
+<div id="logo">☁️</div>
+<div id="title">Luo Cloud</div>
+<div id="subtitle">Your personal cloud storage</div>
+</div>
+<div id="stats">
+<div class="stat"><div class="stat-value" id="file-count">0</div><div class="stat-label">Files Stored</div></div>
+<div class="stat"><div class="stat-value" id="folder-count">0</div><div class="stat-label">Folders</div></div>
+<div class="stat"><div class="stat-value" id="user-count">1</div><div class="stat-label">Active Users</div></div>
+</div>
+<div id="storage-bar">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+<span style="font-size:14px">Storage Used</span>
+<span style="font-size:14px;color:#38bdf8" id="storage-text">0 GB / 15 GB</span>
+</div>
+<div class="bar-container"><div class="bar-used" id="bar-used"></div></div>
+<div class="bar-labels"><span>0 GB</span><span>15 GB</span></div>
+</div>
+<div id="upload-area">
+<div class="upload-icon">📤</div>
+<div class="upload-text">Drop files here or click to upload</div>
+<div class="upload-hint">Maximum file size: 2GB per file</div>
+</div>
+<div id="files"></div>
+<div id="plans">
+<div class="plans-title">Choose Your Plan</div>
+<div class="plans-grid">
+<div class="plan">
+<div class="plan-name">Free</div>
+<div class="plan-price">$0<span>/month</span></div>
+<div class="plan-storage">15 GB Storage</div>
+<div class="plan-features">✓ 15 GB Storage<br>✓ Basic Sharing<br>✓ Mobile Access</div>
+<button class="plan-btn outline">Current Plan</button>
+</div>
+<div class="plan popular">
+<div class="plan-name">Pro</div>
+<div class="plan-price">$9.99<span>/month</span></div>
+<div class="plan-storage">1 TB Storage</div>
+<div class="plan-features">✓ 1 TB Storage<br>✓ Priority Support<br>✓ Advanced Sharing<br>✓ Version History</div>
+<button class="plan-btn">Upgrade</button>
+</div>
+<div class="plan">
+<div class="plan-name">Business</div>
+<div class="plan-price">$49.99<span>/month</span></div>
+<div class="plan-storage">10 TB Storage</div>
+<div class="plan-features">✓ 10 TB Storage<br>✓ Team Collaboration<br>✓ Admin Controls<br>✓ API Access<br>✓ Priority Support</div>
+<button class="plan-btn">Contact Sales</button>
+</div>
+</div>
+</div>
+<script>
+// Luo Cloud Storage System
+class LuoCloud{
+  constructor(){
+    this.maxStorageGB=15;
+    this.maxStorageBytes=this.maxStorageGB*1024*1024*1024;
+    this.files=JSON.parse(localStorage.getItem('luo-cloud-files')||'[]');
+    this.usedBytes=this.calculateUsed();
+    this.init();
+  }
+  
+  init(){
+    this.renderFiles();
+    this.updateStats();
+    this.setupUpload();
+  }
+  
+  calculateUsed(){
+    return this.files.reduce((sum,f)=>sum+(f.size||0),0);
+  }
+  
+  updateStats(){
+    const usedGB=(this.usedBytes/(1024*1024*1024)).toFixed(2);
+    const percent=(this.usedBytes/this.maxStorageBytes)*100;
+    
+    document.getElementById('storage-text').textContent=`${usedGB} GB / ${this.maxStorageGB} GB`;
+    document.getElementById('bar-used').style.width=percent+'%';
+    document.getElementById('file-count').textContent=this.files.length;
+    document.getElementById('folder-count').textContent=new Set(this.files.map(f=>f.folder)).size||1;
+  }
+  
+  renderFiles(){
+    const container=document.getElementById('files');
+    if(this.files.length===0){
+      container.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px;color:#64748b">No files yet. Upload something!</div>';
+      return;
+    }
+    
+    container.innerHTML=this.files.map((f,i)=>{
+      const icon=this.getIcon(f.name);
+      const size=this.formatSize(f.size);
+      const date=new Date(f.date).toLocaleDateString();
+      return `<div class="file-card">
+        <div class="file-icon">${icon}</div>
+        <div class="file-name">${f.name}</div>
+        <div class="file-size">${size}</div>
+        <div class="file-date">${date}</div>
+        <div class="file-actions">
+          <button class="file-btn" onclick="cloud.download(${i})">⬇️</button>
+          <button class="file-btn" onclick="cloud.share('${f.name}')">🔗</button>
+          <button class="file-btn delete" onclick="cloud.delete(${i})">🗑️</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  
+  getIcon(name){
+    const ext=name.split('.').pop().toLowerCase();
+    const icons={
+      jpg:'🖼️',jpeg:'🖼️',png:'🖼️',gif:'🖼️',webp:'🖼️',
+      mp4:'🎬',mov:'🎬',avi:'🎬',mkv:'🎬',
+      mp3:'🎵',wav:'🎵',flac:'🎵',
+      pdf:'📕',doc:'📄',docx:'📄',txt:'📝',xlsx:'📊',pptx:'📽️',
+      zip:'📦',rar:'📦','7z':'📦',
+      html:'🌐',css:'🎨',js:'⚡',py:'🐍',json:'📋'
+    };
+    return icons[ext]||📄;
+  }
+  
+  formatSize(bytes){
+    if(bytes<1024)return bytes+' B';
+    if(bytes<1024*1024)return (bytes/1024).toFixed(1)+' KB';
+    if(bytes<1024*1024*1024)return (bytes/(1024*1024)).toFixed(1)+' MB';
+    return (bytes/(1024*1024*1024)).toFixed(2)+' GB';
+  }
+  
+  addFile(file){
+    if(this.usedBytes+file.size>this.maxStorageBytes){
+      alert('Storage full! Upgrade to Pro for more space.');
+      return false;
+    }
+    
+    this.files.unshift({
+      name:file.name,
+      size:file.size,
+      type:file.type,
+      date:Date.now(),
+      folder:'root'
+    });
+    
+    this.usedBytes+=file.size;
+    this.save();
+    this.renderFiles();
+    this.updateStats();
+    return true;
+  }
+  
+  delete(index){
+    if(confirm('Delete this file?')){
+      this.usedBytes-=this.files[index].size;
+      this.files.splice(index,1);
+      this.save();
+      this.renderFiles();
+      this.updateStats();
+    }
+  }
+  
+  download(index){
+    alert('Download started: '+this.files[index].name);
+  }
+  
+  share(name){
+    alert('Share link copied: luo.cloud/s/'+Math.random().toString(36).substr(2,9));
+  }
+  
+  save(){
+    localStorage.setItem('luo-cloud-files',JSON.stringify(this.files));
+  }
+  
+  setupUpload(){
+    const area=document.getElementById('upload-area');
+    
+    area.onclick=()=>{
+      const input=document.createElement('input');
+      input.type='file';
+      input.multiple=true;
+      input.onchange=(e)=>{
+        Array.from(e.target.files).forEach(f=>this.addFile(f));
+      };
+      input.click();
+    };
+    
+    area.ondragover=(e)=>{
+      e.preventDefault();
+      area.classList.add('dragover');
+    };
+    
+    area.ondragleave=()=>area.classList.remove('dragover');
+    
+    area.ondrop=(e)=>{
+      e.preventDefault();
+      area.classList.remove('dragover');
+      Array.from(e.dataTransfer.files).forEach(f=>this.addFile(f));
+    };
+  }
+}
+
+const cloud=new LuoCloud();
+</script>
+</body>
+</html>
