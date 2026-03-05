@@ -19,7 +19,8 @@ body{font-family:system-ui;background:#0a0a0f;color:#fff;height:100vh;overflow:h
 .window-btns{display:flex;gap:6px}
 .win-btn{width:12px;height:12px;border-radius:50%;border:none;cursor:pointer}
 .win-btn.close{background:#f44}.win-btn.min{background:#fb4}.win-btn.max{background:#4b4}
-.window-content{flex:1;overflow:auto}
+.window-content{flex:1;overflow:hidden}
+.window-content iframe{width:100%;height:100%;border:none}
 #windows{position:fixed;top:0;left:0;width:100%;height:calc(100vh - 50px);pointer-events:none;z-index:100}
 #windows>*{pointer-events:auto}
 </style>
@@ -38,30 +39,25 @@ var apps=[
 ];
 var z=1;
 function init(){
-  document.getElementById('desktop').innerHTML='';
-  document.getElementById('taskbar').innerHTML='';
-  for(var i=0;i<apps.length;i++){
-    var a=apps[i];
-    document.getElementById('desktop').innerHTML+='<div class="icon" onclick="openApp(\''+a.id+'\')"><span>'+a.icon+'</span><span>'+a.name+'</span></div>';
-    document.getElementById('taskbar').innerHTML+='<button class="dock-item" onclick="openApp(\''+a.id+'\')">'+a.icon+'</button>';
-  }
+  document.getElementById('desktop').innerHTML=apps.map(a=>'<div class="icon" onclick="openApp(\''+a.id+'\')"><span>'+a.icon+'</span><span>'+a.name+'</span></div>').join('');
+  document.getElementById('taskbar').innerHTML=apps.map(a=>'<button class="dock-item" onclick="openApp(\''+a.id+'\')">'+a.icon+'</button>').join('');
 }
 function openApp(id){
   var app=apps.find(function(a){return a.id===id});
   if(!app)app={name:id,icon:'📄'};
   var win=document.createElement('div');
   win.className='window';
-  win.style.cssText='left:80px;top:40px;width:600px;height:400px;z-index:'+(++z);
+  win.style.cssText='left:80px;top:40px;width:800px;height:500px;z-index:'+(++z);
   win.innerHTML='<div class="window-header"><div class="window-title"><span>'+(app.icon||'📄')+'</span><span>'+app.name+'</span></div><div class="window-btns"><button class="win-btn min"></button><button class="win-btn max"></button><button class="win-btn close" onclick="this.parentElement.parentElement.parentElement.remove()"></button></div></div><div class="window-content" id="win-'+id+'"></div>';
   document.getElementById('windows').appendChild(win);
   loadApp(id);
 }
 function loadApp(id){
   var c=document.getElementById('win-'+id);
-  if(id==='browser')c.innerHTML='<iframe src="https://google.com" style="width:100%;height:100%;border:none">';
-  else if(id==='calc')c.innerHTML='<div style="padding:20px"><h2>Calculator</h2><p>Works!</p></div>';
+  if(id==='browser')c.innerHTML='<iframe src="browser.html"></iframe>';
+  else if(id==='calc')c.innerHTML='<div style="padding:20px"><h2>Calculator</h2><p>Coming soon!</p></div>';
   else if(id==='terminal')c.innerHTML='<pre style="color:#0f0;padding:10px">Luo Terminal v1.0\n$ _</pre>';
-  else c.innerHTML='<div style="padding:20px"><h2>'+app.name+'</h2><p>App content</p></div>';
+  else c.innerHTML='<div style="padding:20px"><h2>'+apps.find(function(a){return a.id===id}).name+'</h2><p>App content</p></div>';
 }
 init();
 </script>
