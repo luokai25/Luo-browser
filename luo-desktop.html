@@ -37,7 +37,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .browser-url{flex:1;padding:8px 16px;background:rgba(255,255,255,0.95);border:none;border-radius:20px;color:#333;outline:none}
 .browser-content{flex:1;background:#fff}
 .browser-frame{width:100%;height:100%;border:none}
-.app-files,.app-homey,.app-settings,.app-trading,.app-terminal,.app-agent,.app-calendar{height:100%;padding:20px;overflow:auto}
 /* Taskbar */
 .taskbar-dock{display:flex;align-items:center;gap:4px;padding:4px;background:rgba(255,255,255,0.05);border-radius:16px}
 .dock-item{width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:none;border:none;border-radius:12px;cursor:pointer;font-size:24px;transition:transform 0.2s}
@@ -109,6 +108,28 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .calc-btn.op{background:var(--accent);color:#fff}
 .calc-btn.eq{background:#34d399;color:#fff}
 .calc-btn.zero{grid-column:span 2}
+/* OpenClaw Launcher */
+.oc-launcher{padding:20px;height:100%;overflow-y:auto}
+.oc-header{display:flex;align-items:center;gap:15px;margin-bottom:20px}
+.oc-icon{font-size:48px}
+.oc-title{font-size:24px;margin:0}
+.oc-status{display:flex;align-items:center;gap:15px;padding:15px;background:rgba(255,255,255,0.05);border-radius:12px;margin-bottom:20px}
+.oc-status-label{color:rgba(255,255,255,0.6);font-size:14px}
+.oc-status-value{font-size:18px;font-weight:600}
+.oc-indicator{width:12px;height:12px;border-radius:50%;margin-left:auto}
+.oc-indicator.online{background:#34d399;box-shadow:0 0 10px #34d399}
+.oc-indicator.offline{background:#f87171}
+.oc-buttons{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px}
+.oc-btn{padding:15px 20px;border:none;border-radius:12px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.oc-btn.primary{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff}
+.oc-btn.secondary{background:rgba(255,255,255,0.1);color:#fff}
+.oc-info{background:rgba(255,255,255,0.03);border-radius:12px;padding:20px}
+.oc-info h3{font-size:16px;margin:0 0 10px}
+.oc-info p{color:rgba(255,255,255,0.7);font-size:14px;line-height:1.6;margin:0}
+.oc-terminal{display:none;background:#0d1117;border-radius:12px;overflow:hidden;margin-top:15px}
+.oc-term-header{display:flex;justify-content:space-between;padding:10px 15px;background:rgba(255,255,255,0.05);font-size:13px;color:rgba(255,255,255,0.6)}
+.oc-term-body{padding:15px;font-family:monospace;font-size:13px;max-height:150px;overflow-y:auto}
+.oc-term-line{color:#c9d1d9;margin-bottom:4px}
     </style>
 </head>
 <body>
@@ -124,11 +145,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="wayne-portal" id="wayne-portal">
         <div class="portal-header">
             <div class="portal-avatar"><span class="avatar-icon">👊</span><span class="status-dot online"></span></div>
-            <div class="portal-info"><span class="portal-name">Wayne</span><span class="portal-status">Online</span></div>
+            <div class="portal-info"><span class="portal-name">Wayne</span><span class="portal-status">Demo Mode</span></div>
             <button class="portal-toggle" id="portal-toggle">−</button>
         </div>
         <div class="portal-messages" id="portal-messages">
-            <div class="message assistant"><span class="msg-icon">👊</span><span class="msg-text">Hey! I'm Wayne. I'm now inside Luo Desktop. How can I help?</span></div>
+            <div class="message assistant"><span class="msg-icon">👊</span><span class="msg-text">Hey! I'm Wayne. Running in demo mode. Install OpenClaw for real AI!</span></div>
         </div>
         <div class="portal-input-area">
             <input type="text" class="portal-input" id="portal-input" placeholder="Talk to Wayne...">
@@ -136,27 +157,41 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         </div>
         <div class="portal-actions">
             <button class="action-btn" data-action="homey">🏠 Homey</button>
+            <button class="action-btn" data-action="openclaw">🦞 OpenClaw</button>
             <button class="action-btn" data-action="files">📁 Files</button>
-            <button class="action-btn" data-action="browser">🌐 Browser</button>
             <button class="action-btn" data-action="search">🔍 Search</button>
         </div>
     </div>
 <script>
 /* Luo Desktop - Complete in One File */
-const apps=[{id:'browser',name:'Browser',icon:'🌐'},{id:'files',name:'Files',icon:'📁'},{id:'terminal',name:'Terminal',icon:'⌨️'},{id:'homey',name:'Homey',icon:'🏠'},{id:'settings',name:'Settings',icon:'⚙️'},{id:'trading',name:'Trading',icon:'📈'},{id:'agent',name:'AI Agent',icon:'🤖'},{id:'notepad',name:'Notepad',icon:'📝'},{id:'calculator',name:'Calculator',icon:'🧮'},{id:'calendar',name:'Calendar',icon:'📅'},{id:'music',name:'Music',icon:'🎵'},{id:'notes',name:'Notes',icon:'📒'}];
-const windows=[];let zIndex=100,activeWindow=null;
+const apps=[
+    {id:'browser',name:'Browser',icon:'🌐'},
+    {id:'files',name:'Files',icon:'📁'},
+    {id:'terminal',name:'Terminal',icon:'⌨️'},
+    {id:'homey',name:'Homey',icon:'🏠'},
+    {id:'settings',name:'Settings',icon:'⚙️'},
+    {id:'trading',name:'Trading',icon:'📈'},
+    {id:'agent',name:'AI Agent',icon:'🤖'},
+    {id:'notepad',name:'Notepad',icon:'📝'},
+    {id:'calculator',name:'Calculator',icon:'🧮'},
+    {id:'calendar',name:'Calendar',icon:'📅'},
+    {id:'music',name:'Music',icon:'🎵'},
+    {id:'notes',name:'Notes',icon:'📒'},
+    {id:'openclaw',name:'OpenClaw',icon:'🦞'}
+];
+const windows=[];let zIndex=100;
 function init(){renderDesktopIcons();renderTaskbar();setupEvents();updateClock();setInterval(updateClock,1e3)}
 function renderDesktopIcons(){const c=document.getElementById('desktop-icons');c.innerHTML=apps.map(a=>`<div class="desktop-icon" data-app="${a.id}"><span class="icon">${a.icon}</span><span>${a.name}</span></div>`).join('');c.querySelectorAll('.desktop-icon').forEach(e=>e.addEventListener('dblclick',()=>openApp(e.dataset.app)))}
 function renderTaskbar(){const d=document.getElementById('dock-apps');d.innerHTML=apps.slice(0,6).map(a=>`<button class="dock-item" data-app="${a.id}">${a.icon}</button>`).join('');d.querySelectorAll('.dock-item').forEach(e=>e.addEventListener('click',()=>openApp(e.dataset.app)))}
 function openApp(id){const a=apps.find(x=>x.id===id);if(!a)return;const wid='win-'+Date.now(),w=document.createElement('div');w.className='window';w.id=wid;w.innerHTML=`<div class="window-header"><div class="window-title"><span>${a.icon}</span><span class="window-title-text">${a.name}</span></div><div class="window-controls"><button class="window-btn minimize"></button><button class="window-btn maximize"></button><button class="window-btn close"></button></div></div><div class="window-content" id="content-${wid}"></div>`;w.style.cssText=`left:${100+windows.length*30}px;top:${50+windows.length*30}px;width:700px;height:500px;z-index:${++zIndex}`;document.getElementById('windows').appendChild(w);windows.push({id:wid,appId:id,el:w});setupWindowEvents(w);renderAppContent(id,wid);focusWindow(wid)}
-function renderAppContent(appId,wid){const c=document.getElementById('content-'+wid);if(appId==='browser')c.innerHTML=`<div class="app-browser"><div class="browser-toolbar"><button class="browser-btn">←</button><button class="browser-btn">→</button><button class="browser-btn">↻</button><input type="text" class="browser-url" placeholder="Search or enter URL..." value="luosearch.html"><button class="browser-btn">🏠</button></div><div class="browser-content"><iframe class="browser-frame" src="luosearch.html"></iframe></div></div>`;else if(appId==='terminal')c.innerHTML=`<div class="app-terminal"><div class="terminal-output"><div class="terminal-line">Luo Desktop Terminal v1.0.0</div><div class="terminal-line">Type 'help' for commands</div></div><div class="terminal-input-line"><span class="terminal-prompt">luo@desktop:~$</span><input type="text" class="terminal-input"></div></div>`;else if(appId==='settings')c.innerHTML=`<div style="display:flex;height:100%"><div class="settings-sidebar"><button class="settings-nav active">🎨 Appearance</button><button class="settings-nav">🖥️ Display</button><button class="settings-nav">🔊 Sound</button><button class="settings-nav">🌐 Network</button></div><div style="flex:1;padding:20px"><h2>Appearance</h2><div class="setting-item"><span>Dark Mode</span><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div><div class="setting-item"><span>Animations</span><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div></div></div>`;else if(appId==='calculator')c.innerHTML=`<div class="calculator"><div class="calc-display">0</div><div class="calc-buttons"><button class="calc-btn fn">C</button><button class="calc-btn fn">±</button><button class="calc-btn fn">%</button><button class="calc-btn op">÷</button><button class="calc-btn num">7</button><button class="calc-btn num">8</button><button class="calc-btn num">9</button><button class="calc-btn op">×</button><button class="calc-btn num">4</button><button class="calc-btn num">5</button><button class="calc-btn num">6</button><button class="calc-btn op">-</button><button class="calc-btn num">1</button><button class="calc-btn num">2</button><button class="calc-btn num">3</button><button class="calc-btn op">+</button><button class="calc-btn num zero">0</button><button class="calc-btn num">.</button><button class="calc-btn eq">=</button></div></div>`;else c.innerHTML='<div style="padding:20px"><h2>'+apps.find(x=>x.id===appId).name+'</h2><p>App content coming soon!</p></div>'}
+function renderAppContent(appId,wid){const c=document.getElementById('content-'+wid);if(appId==='browser')c.innerHTML=`<div class="app-browser" style="height:100%"><div class="browser-toolbar"><button class="browser-btn">←</button><button class="browser-btn">→</button><button class="browser-btn">↻</button><input type="text" class="browser-url" placeholder="Search or enter URL..." value="https://www.google.com"><button class="browser-btn">🌐</button></div><div class="browser-content"><iframe class="browser-frame" src="https://www.google.com"></iframe></div></div>`;else if(appId==='terminal')c.innerHTML=`<div class="app-terminal"><div class="terminal-output"><div class="terminal-line">Luo Desktop Terminal v1.0.0</div><div class="terminal-line">Type 'help' for commands</div></div><div class="terminal-input-line"><span class="terminal-prompt">luo@desktop:~$</span><input type="text" class="terminal-input"></div></div>`;else if(appId==='settings')c.innerHTML=`<div style="display:flex;height:100%"><div class="settings-sidebar"><button class="settings-nav active">🎨 Appearance</button><button class="settings-nav">🖥️ Display</button><button class="settings-nav">🔊 Sound</button><button class="settings-nav">🌐 Network</button></div><div style="flex:1;padding:20px"><h2>Appearance</h2><div class="setting-item"><span>Dark Mode</span><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div><div class="setting-item"><span>Animations</span><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div></div></div>`;else if(appId==='calculator'){let d='0',op=null,prev=null;c.innerHTML=`<div class="calculator"><div class="calc-display" id="calc-display">0</div><div class="calc-buttons"><button class="calc-btn fn">C</button><button class="calc-btn fn">±</button><button class="calc-btn fn">%</button><button class="calc-btn op">÷</button><button class="calc-btn num">7</button><button class="calc-btn num">8</button><button class="calc-btn num">9</button><button class="calc-btn op">×</button><button class="calc-btn num">4</button><button class="calc-btn num">5</button><button class="calc-btn num">6</button><button class="calc-btn op">-</button><button class="calc-btn num">1</button><button class="calc-btn num">2</button><button class="calc-btn num">3</button><button class="calc-btn op">+</button><button class="calc-btn num zero">0</button><button class="calc-btn num">.</button><button class="calc-btn eq">=</button></div></div>`;c.querySelectorAll('.calc-btn').forEach(b=>b.addEventListener('click',()=>{const disp=document.getElementById('calc-display');if(b.textContent==='C'){d='0';op=null;prev=null}else if(b.textContent==='='){if(prev&&op){d=eval(prev+op+d).toString();op=null;prev=null}}else if(['+','-','×','÷'].includes(b.textContent)){op=b.textContent==='×'?'*':b.textContent==='÷'?'/':b.textContent;prev=d;d='0'}else if(b.textContent==='±'){d=(parseFloat(d)*-1).toString()}else if(b.textContent==='%'){d=(parseFloat(d)/100).toString()}else{d=b.textContent==='0'&&d==='0'?d:d+b.textContent;if(d.split('.').length>1)d=d.replace(/(\..*)\./,'$1')}disp.textContent=d}))}else if(appId==='openclaw'){c.innerHTML=`<div class="oc-launcher"><div class="oc-header"><span class="oc-icon">🦞</span><h2 class="oc-title">OpenClaw Launcher</h2></div><div class="oc-status"><span class="oc-status-label">Status</span><span class="oc-status-value" id="oc-status">Checking...</span><div class="oc-indicator offline" id="oc-indicator"></div></div><div class="oc-buttons"><button class="oc-btn primary" id="oc-install">⚡ Install</button><button class="oc-btn secondary" id="oc-start">▶️ Start</button><button class="oc-btn secondary" id="oc-setup">⚙️ Setup</button><button class="oc-btn secondary" id="oc-refresh">🔄 Refresh</button></div><div class="oc-info"><h3>What is OpenClaw?</h3><p>OpenClaw is your personal AI that runs locally. Gives Wayne real intelligence!</p></div><div class="oc-terminal" id="oc-terminal"><div class="oc-term-header"><span>Terminal</span><span id="oc-close">✕</span></div><div class="oc-term-body" id="oc-term-body"></div></div></div>`;const checkOC=async()=>{const s=document.getElementById('oc-status'),i=document.getElementById('oc-indicator');try{const r=await fetch('http://127.0.0.1:18789/api/status');if(r.ok){s.textContent='Running ✅';i.className='oc-indicator online';return}}catch(e){}s.textContent='Not Running';i.className='oc-indicator offline'};const showOC=()=>document.getElementById('oc-terminal').style.display='block';const logOC=t=>{const b=document.getElementById('oc-term-body'),l=document.createElement('div');l.className='oc-term-line';l.textContent=t;b.appendChild(l);b.scrollTop=b.scrollHeight};document.getElementById('oc-install').onclick=()=>{showOC();logOC('Install: npm install -g openclaw');logOC('Then: openclaw onboard')};document.getElementById('oc-start').onclick=()=>{showOC();logOC('Run: openclaw gateway')};document.getElementById('oc-setup').onclick=()=>{showOC();logOC('Run: openclaw onboard')};document.getElementById('oc-refresh').onclick=checkOC;document.getElementById('oc-close').onclick=()=>document.getElementById('oc-terminal').style.display='none';checkOC()}else c.innerHTML=`<div style="padding:20px"><h2>${apps.find(x=>x.id===appId).name}</h2><p>App content coming soon!</p></div>`}
 function setupWindowEvents(w){w.querySelectorAll('.window-btn').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const a=b.classList.contains('minimize')?'minimize':b.classList.contains('maximize')?'maximize':'close';if(a==='close'){w.remove();windows.splice(windows.findIndex(x=>x.el===w),1)}else if(a==='minimize')w.classList.add('minimized');else w.classList.toggle('maximized')}));let drag=false,dx=0,dy=0;w.querySelector('.window-header').addEventListener('mousedown',e=>{if(e.target.classList.contains('window-btn'))return;drag=true;dx=e.clientX-w.offsetLeft;dy=e.clientY-w.offsetTop});document.addEventListener('mousemove',e=>{if(!drag)return;w.style.left=e.clientX-dx+'px';w.style.top=e.clientY-dy+'px'});document.addEventListener('mouseup',()=>drag=false);w.addEventListener('mousedown',()=>focusWindow(w.id))}
-function focusWindow(id){const w=document.getElementById(id);w.style.zIndex=++zIndex;windows.forEach(x=>x.el.classList.toggle('active',x.id===id));activeWindow=id}
-function setupEvents(){document.getElementById('portal-mini').addEventListener('click',()=>togglePortal());document.getElementById('portal-toggle').addEventListener('click',()=>togglePortal());document.getElementById('portal-send').addEventListener('click',sendMessage);document.getElementById('portal-input').addEventListener('keydown',e=>{if(e.key==='Enter')sendMessage()})}
+function focusWindow(id){const w=document.getElementById(id);w.style.zIndex=++zIndex;windows.forEach(x=>x.el.classList.toggle('active',x.id===id))}
+function setupEvents(){document.getElementById('portal-mini').onclick=()=>togglePortal();document.getElementById('portal-toggle').onclick=()=>togglePortal();document.getElementById('portal-send').onclick=sendMessage;document.getElementById('portal-input').onkeydown=e=>{if(e.key==='Enter')sendMessage()}}
 function togglePortal(){const p=document.getElementById('wayne-portal'),m=document.getElementById('portal-mini');if(p.classList.contains('open')){p.classList.remove('open');m.style.display='flex'}else{p.classList.add('open');m.style.display='none';document.getElementById('portal-input').focus()}}
 function sendMessage(){const i=document.getElementById('portal-input'),t=i.value.trim();if(!t)return;addMessage(t,'user');i.value='';setTimeout(()=>addMessage(generateResponse(t),'assistant'),500+Math.random()*1e3)}
 function addMessage(text,type){const m=document.getElementById('portal-messages'),d=document.createElement('div');d.className='message '+type;d.innerHTML=type==='user'?`<span class="msg-text">${text}</span>`:`<span class="msg-icon">👊</span><span class="msg-text">${text}</span>`;m.appendChild(d);m.scrollTop=m.scrollHeight}
-function generateResponse(m){m=m.toLowerCase();if(m.includes('homey')||m.includes('light'))return"🏠 I can see your Homey devices! You've got 1,708 devices.";if(m.includes('file')||m.includes('folder'))return"📁 Want me to open the Files app?";if(m.includes('search'))return"🔍 Let's search! What do you want to find?";if(m.includes('hello')||m.includes('hi'))return"👊 Hey! Good to be here inside Luo Desktop!";if(m.includes('help'))return"🤖 I'm Wayne! I can help with Homey, files, search, and more!";return"👊 I hear you! I'm here to help. What do you need?"}
+function generateResponse(m){m=m.toLowerCase();if(m.includes('homey')||m.includes('light'))return"🏠 I can see your Homey devices! You've got 1,708 devices.";if(m.includes('file')||m.includes('folder'))return"📁 Want me to open the Files app?";if(m.includes('search'))return"🔍 Let's search! What do you want to find?";if(m.includes('hello')||m.includes('hi'))return"👊 Hey! Good to be here inside Luo Desktop!";if(m.includes('help'))return"🤖 I'm Wayne! Click 🦞 icon to install OpenClaw for real AI!";if(m.includes('openclaw'))return"🦞 Click the OpenClaw icon to install and enable real AI!";return"👊 I hear you! Click 🦞 for OpenClaw!"}
 function updateClock(){const n=new Date,d=document.getElementById('clock'),t=document.getElementById('date');d.textContent=n.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});t.textContent=n.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}
 document.addEventListener('DOMContentLoaded',init);
 </script>
